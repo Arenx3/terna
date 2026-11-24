@@ -84,7 +84,12 @@ Models are downloaded once into a dedicated volume. No external API is called. T
 
 ## Authentication and access
 
-- **Team members:** sign in with email. JWT access tokens, plus a refresh token kept in an `httpOnly`, `SameSite=Strict` cookie.
+- **Team members:** sign in with email. The access token lives 10 minutes, only in memory, and carries the active company (`company_id`), which scopes every request. The refresh token lives in an `httpOnly`, `SameSite=Strict` cookie restricted to `/api/auth/`, so JavaScript never reads it and other sites never send it. Each refresh rotates it and revokes the old one, and checks the membership again.
+- **Sign-up** creates the company, its first admin and their membership in one transaction, then sends a verification link. Login requires a verified address.
+- **No account discovery:** sign-up, resending verification and password reset answer the same whether or not the address has an account. A sign-up with a taken address emails its owner instead. Unknown addresses still cost a password hash, so timing reveals nothing either.
+- **Rate limits** per client IP and per target address on every authentication endpoint.
+- **Emails** (verification, recovery) are sent by the default worker, in the person's language, with links signed at send time. Recovery links expire in 2 hours and work once.
+- **People are global** (`accounts_user`): one person can belong to several companies. Memberships are tenant data under row-level security; at login, when no company is active yet, a `SECURITY DEFINER` function lists one person's own memberships.
 - **Roles per company:** admin, recruiter, hiring manager, interviewer. A person can belong to several companies.
 - **Candidates:** signed magic links, each limited to a single application and set to expire.
 - **Shared clips and Terna views:** signed, expiring links that are never indexed.

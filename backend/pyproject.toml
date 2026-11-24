@@ -10,6 +10,7 @@ dependencies = [
     "channels-redis>=4.2,<5",
     "django>=5.2,<5.3",
     "djangorestframework>=3.16,<4",
+    "djangorestframework-simplejwt>=5.5,<6",
     "drf-spectacular>=0.28,<1",
     "drf-spectacular-sidecar>=2025.1",
     "psycopg[binary]>=3.2,<4",
@@ -48,9 +49,9 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["S101"]
+"**/tests/**" = ["S101", "S105", "S106"]
 # Django declares migrations and Meta options as class-level lists by design.
-"**/migrations/**" = ["RUF012"]
+"**/migrations/**" = ["RUF012", "E501"]
 "**/serializers.py" = ["RUF012"]
 "**/views.py" = ["RUF012"]
 

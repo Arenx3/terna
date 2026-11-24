@@ -1,0 +1,14 @@
+{% autoescape off %}Hola, {{ user.full_name }}:
+
+Alguien intentó registrarse en Terna con este correo, pero ya tiene una cuenta.
+
+Si fuiste tú, inicia sesión aquí:
+{{ login_link }}
+
+¿Olvidaste tu contraseña? Restablécela aquí:
+{{ reset_link }}
+
+Si no fuiste tú, puedes ignorar este correo. Tu cuenta no cambió.
+
+— Terna
+{% endautoescape %}

@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
-    "api:types": "npx --yes openapi-typescript@7.13.0 \"http://127.0.0.1:8080/api/schema/?format=json\" -o src/api/schema.d.ts && prettier --write src/api/schema.d.ts"
+    "api:types": "npx --yes openapi-typescript@7.13.0 \"http://127.0.0.1:8080/api/schema/?format=json\" -o src/api/schema.d.ts && prettier --write src/api/schema.d.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10",
+    "@playwright/test": "^1.65.1",
     "@types/node": "^26.6.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",

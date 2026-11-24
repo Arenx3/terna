@@ -122,6 +122,7 @@ npm ci
 npm run dev          # http://localhost:5173, proxies /api to the stack on :8080
 npm run lint && npm run typecheck && npm run build
 npm run api:types    # regenerate the typed API client after backend changes
+npm run test:e2e     # browser tests against the stack (MAILPIT_URL if Mailpit is not on :8025)
 ```
 
 Every visible string lives in `frontend/src/i18n/locales/` (English and Spanish). The lint fails on hardcoded text in components, and the type check fails when a key is missing in either language.

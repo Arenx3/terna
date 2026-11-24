@@ -18,6 +18,10 @@ GLOBAL_TABLES = frozenset(
         "auth_user",
         "auth_user_groups",
         "auth_user_user_permissions",
+        # People are global: one person can belong to several companies.
+        "accounts_user",
+        "token_blacklist_outstandingtoken",
+        "token_blacklist_blacklistedtoken",
     }
 )
 

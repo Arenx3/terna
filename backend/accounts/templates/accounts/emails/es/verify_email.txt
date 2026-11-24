@@ -1,0 +1,10 @@
+{% autoescape off %}Hola, {{ user.full_name }}:
+
+Confirma tu correo para terminar de crear tu cuenta de Terna:
+
+{{ link }}
+
+El enlace vence en 3 días. Si no creaste una cuenta, puedes ignorar este correo.
+
+— Terna
+{% endautoescape %}

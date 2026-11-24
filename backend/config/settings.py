@@ -4,6 +4,7 @@ Everything comes from the environment (see ``config.env``). The defaults are
 safe for local development; ``compose.yaml`` wires the generated secrets.
 """
 
+from datetime import timedelta
 from pathlib import Path
 from urllib.parse import quote
 
@@ -26,17 +27,23 @@ INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "core",
     "tenancy",
+    "accounts",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    # API messages follow the Accept-Language header the app sends.
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
+
+AUTH_USER_MODEL = "accounts.User"
 
 ROOT_URLCONF = "config.urls"
 ASGI_APPLICATION = "config.asgi.application"
@@ -106,13 +113,67 @@ CHANNEL_LAYERS = {
 # API
 
 REST_FRAMEWORK = {
-    # Closed by default: every endpoint must opt out explicitly. Authentication arrives with #7.
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    # Closed by default: every endpoint must opt out explicitly.
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "core.exceptions.exception_handler",
     "UNAUTHENTICATED_USER": None,
+    # Per client IP (IPRateThrottle) and per target address (EmailRateThrottle).
+    "DEFAULT_THROTTLE_RATES": {
+        "signup": "5/hour",
+        "login": "20/min",
+        "login_email": "5/min",
+        "refresh": "60/min",
+        "verify_email": "30/hour",
+        "resend_verification": "10/hour",
+        "resend_verification_email": "3/hour",
+        "password_reset": "10/hour",
+        "password_reset_email": "3/hour",
+        "password_reset_confirm": "20/hour",
+    },
 }
+
+# Authentication
+
+SIMPLE_JWT = {
+    # Short-lived and kept in memory by the app; carries the active company.
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    # In an httpOnly cookie, single use: every refresh rotates it.
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": False,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+}
+AUTH_REFRESH_COOKIE = "terna_refresh"
+AUTH_REFRESH_COOKIE_PATH = "/api/auth/"
+# Set to true behind HTTPS. Plain HTTP on localhost needs it off.
+AUTH_COOKIE_SECURE = env_bool("AUTH_COOKIE_SECURE", False)
+
+EMAIL_VERIFICATION_MAX_AGE = int(timedelta(days=3).total_seconds())
+PASSWORD_RESET_TIMEOUT = int(timedelta(hours=2).total_seconds())
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "OPTIONS": {"user_attributes": ("email", "full_name")},
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 10},
+    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# Base URL of the web app, used in links sent by email.
+PUBLIC_APP_URL = env("PUBLIC_APP_URL", "http://localhost:8080")
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Terna API",
@@ -160,6 +221,7 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Terna <no-reply@terna.localhost>
 # Internationalization
 
 LANGUAGE_CODE = "en"
+LANGUAGES = [("en", "English"), ("es", "Español")]
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
