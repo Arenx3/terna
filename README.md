@@ -84,6 +84,8 @@ No accounts, API keys or `.env` needed. Secrets are generated on first start and
 | URL | What |
 |---|---|
 | http://localhost:8080 | Terna |
+| http://localhost:8080/api/docs/ | API reference (OpenAPI) |
+| http://localhost:8080/api/health/ | Health of the database, Redis and storage |
 | http://localhost:8025 | Mailpit, the inbox that catches every email |
 | http://localhost:9001/rustfs/console/ | Storage console (RustFS) |
 
@@ -96,6 +98,18 @@ docker compose exec backend sh -c 'cat /run/secrets/storage_access_key; echo; ca
 Stop with `docker compose down`. Add `-v` to also delete the data and the generated secrets.
 
 The stack runs today; product features land phase by phase.
+
+## Development
+
+Tests and lint run in containers, so the only requirement is Docker:
+
+```bash
+docker compose --profile test run --rm tests                  # backend tests
+docker compose --profile test run --rm --no-deps tests \
+  sh -c 'ruff check . && ruff format --check .'               # lint and formatting
+```
+
+Install the Git hooks once with `pre-commit install` (via `pipx`, `uv tool` or `pip`). They run Ruff, keep `uv.lock` in sync and catch common mistakes before each commit.
 
 ## Documentation
 
