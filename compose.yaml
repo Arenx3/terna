@@ -1,0 +1,255 @@
+# Terna local stack: `docker compose up -d --build --wait`.
+# No configuration needed. To override a default, copy .env.example to .env.
+
+name: terna
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-backend-environment: &backend-environment
+  DJANGO_SECRET_KEY_FILE: /run/secrets/django_secret_key
+  DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
+  DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+  DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:${TERNA_HTTP_PORT:-8080}}
+  POSTGRES_HOST: postgres
+  POSTGRES_DB: terna
+  POSTGRES_USER: terna
+  POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+  REDIS_HOST: redis
+  REDIS_PASSWORD_FILE: /run/secrets/redis_password
+  STORAGE_ENDPOINT_URL: ${STORAGE_ENDPOINT_URL:-http://storage:9000}
+  STORAGE_PUBLIC_URL: ${STORAGE_PUBLIC_URL:-http://localhost:${STORAGE_API_PORT:-9000}}
+  STORAGE_BUCKET: ${STORAGE_BUCKET:-terna}
+  STORAGE_REGION: ${STORAGE_REGION:-us-east-1}
+  STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-}
+  STORAGE_ACCESS_KEY_FILE: /run/secrets/storage_access_key
+  STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:-}
+  STORAGE_SECRET_KEY_FILE: /run/secrets/storage_secret_key
+  EMAIL_HOST: ${EMAIL_HOST:-mailpit}
+  EMAIL_PORT: ${EMAIL_PORT:-1025}
+  EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+  EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+  EMAIL_USE_TLS: ${EMAIL_USE_TLS:-false}
+  DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-Terna <no-reply@terna.localhost>}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+x-backend: &backend
+  build:
+    context: ./backend
+    target: app
+  image: terna-backend:dev
+  environment: *backend-environment
+  volumes:
+    - secrets:/run/secrets:ro
+  init: true
+  restart: unless-stopped
+  logging: *logging
+  depends_on: &backend-depends-on
+    bootstrap:
+      condition: service_completed_successfully
+    redis:
+      condition: service_healthy
+
+x-worker-healthcheck: &worker-healthcheck
+  interval: 30s
+  timeout: 15s
+  retries: 3
+  start_period: 60s
+  start_interval: 3s
+
+services:
+  secrets-init:
+    image: alpine:3.24
+    command: ["sh", "/scripts/secrets-init.sh"]
+    volumes:
+      - secrets:/run/secrets
+      - ./scripts/secrets-init.sh:/scripts/secrets-init.sh:ro
+    restart: "no"
+    logging: *logging
+
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg16-trixie
+    environment:
+      POSTGRES_DB: terna
+      POSTGRES_USER: terna
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - secrets:/run/secrets:ro
+    depends_on:
+      secrets-init:
+        condition: service_completed_successfully
+    healthcheck:
+      # TCP on purpose: during first-run init Postgres only listens on the Unix socket.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U terna -d terna"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+      start_interval: 2s
+    restart: unless-stopped
+    logging: *logging
+
+  redis:
+    image: redis:8.8-alpine
+    user: redis
+    # The password stays out of the command line: it goes into a config file at start.
+    entrypoint:
+      - sh
+      - -c
+      - printf 'requirepass %s\n' "$$(cat /run/secrets/redis_password)" > /tmp/redis.conf && exec redis-server /tmp/redis.conf --appendonly yes
+    volumes:
+      - redis-data:/data
+      - secrets:/run/secrets:ro
+    depends_on:
+      secrets-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$(cat /run/secrets/redis_password)\" redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 2s
+    restart: unless-stopped
+    logging: *logging
+
+  storage:
+    image: rustfs/rustfs:1.0.6
+    environment:
+      RUSTFS_ACCESS_KEY_FILE: /run/secrets/storage_access_key
+      RUSTFS_SECRET_KEY_FILE: /run/secrets/storage_secret_key
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+    ports:
+      - "127.0.0.1:${STORAGE_API_PORT:-9000}:9000"
+      - "127.0.0.1:${STORAGE_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - storage-data:/data
+      - secrets:/run/secrets:ro
+    depends_on:
+      secrets-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/health > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      start_interval: 2s
+    restart: unless-stopped
+    logging: *logging
+
+  mailpit:
+    image: axllent/mailpit:v1.34
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+      start_interval: 2s
+    restart: unless-stopped
+    logging: *logging
+
+  # One-shot: applies migrations and creates the bucket before anything else uses them.
+  bootstrap:
+    <<: *backend
+    command: ["python", "manage.py", "bootstrap"]
+    restart: "no"
+    depends_on:
+      secrets-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+
+  backend:
+    <<: *backend
+    healthcheck:
+      test: ["CMD", "python", "docker/healthcheck.py", "http"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 2s
+
+  worker-default:
+    <<: *backend
+    command: ["celery", "-A", "config", "worker", "--queues", "default", "--hostname", "default@%h", "--concurrency", "${WORKER_DEFAULT_CONCURRENCY:-2}"]
+    healthcheck:
+      <<: *worker-healthcheck
+      test: ["CMD", "python", "docker/healthcheck.py", "worker", "default"]
+    stop_grace_period: 30s
+
+  worker-media:
+    <<: *backend
+    build:
+      context: ./backend
+      target: media
+    image: terna-backend-media:dev
+    command: ["celery", "-A", "config", "worker", "--queues", "media", "--hostname", "media@%h", "--concurrency", "${WORKER_MEDIA_CONCURRENCY:-1}"]
+    healthcheck:
+      <<: *worker-healthcheck
+      test: ["CMD", "python", "docker/healthcheck.py", "worker", "media"]
+    stop_grace_period: 60s
+
+  # One task at a time: local models are memory hungry.
+  worker-ml:
+    <<: *backend
+    build:
+      context: ./backend
+      target: ml
+    image: terna-backend-ml:dev
+    command: ["celery", "-A", "config", "worker", "--queues", "ml", "--hostname", "ml@%h", "--concurrency", "1"]
+    volumes:
+      - secrets:/run/secrets:ro
+      - models-cache:/models
+    healthcheck:
+      <<: *worker-healthcheck
+      test: ["CMD", "python", "docker/healthcheck.py", "worker", "ml"]
+    stop_grace_period: 60s
+
+  beat:
+    <<: *backend
+    command: ["celery", "-A", "config", "beat", "--schedule", "/tmp/celerybeat-schedule"]
+    healthcheck:
+      <<: *worker-healthcheck
+      test: ["CMD", "python", "docker/healthcheck.py", "beat"]
+
+  nginx:
+    build:
+      context: ./nginx
+    image: terna-nginx:dev
+    ports:
+      - "127.0.0.1:${TERNA_HTTP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/nginx-health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+      start_interval: 2s
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  secrets:
+  postgres-data:
+  redis-data:
+  storage-data:
+  models-cache:

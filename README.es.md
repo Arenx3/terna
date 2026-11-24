@@ -74,10 +74,28 @@ El avance se sigue en los [milestones](https://github.com/Arenx3/terna/milestone
 ```bash
 git clone https://github.com/Arenx3/terna.git
 cd terna
-docker compose up -d --build
+docker compose up -d --build --wait
 ```
 
-Disponible al cerrar la Fase 1. Requiere Docker con al menos 8 GB de memoria.
+No necesita cuentas, API keys ni `.env`. Los secretos se generan en el primer arranque y se guardan en el volumen `terna_secrets`. Para cambiar un valor por defecto (puertos, proveedor de correo o de almacenamiento), copia `.env.example` a `.env`.
+
+**Requisitos:** Docker con Compose v2.24 o posterior. Asigna a Docker al menos 8 GB de memoria: los modelos de IA local de fases posteriores los necesitan.
+
+| URL | Qué es |
+|---|---|
+| http://localhost:8080 | Terna |
+| http://localhost:8025 | Mailpit, la bandeja que atrapa todos los correos |
+| http://localhost:9001/rustfs/console/ | Consola de almacenamiento (RustFS) |
+
+Todos los puertos se publican solo en `127.0.0.1`. Credenciales de la consola de almacenamiento:
+
+```bash
+docker compose exec backend sh -c 'cat /run/secrets/storage_access_key; echo; cat /run/secrets/storage_secret_key; echo'
+```
+
+Detén todo con `docker compose down`. Agrega `-v` para borrar también los datos y los secretos generados.
+
+El stack ya corre; las funciones del producto llegan fase por fase.
 
 ## Documentación
 

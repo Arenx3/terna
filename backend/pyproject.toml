@@ -1,0 +1,15 @@
+[project]
+name = "terna-backend"
+version = "0.1.0"
+description = "Terna API, WebSockets and background workers"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "boto3>=1.35,<2",
+    "celery[redis]>=5.5,<6",
+    "django>=5.2,<5.3",
+    "psycopg[binary]>=3.2,<4",
+    "uvicorn[standard]>=0.30",
+]
+
+[tool.uv]
+package = false
