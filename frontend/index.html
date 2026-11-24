@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" class="dark" style="color-scheme: dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Terna</title>
+    <script>
+      // Runs before first paint, so a saved light theme never flashes dark (and vice versa).
+      // Keys must match THEME_STORAGE_KEY and LANGUAGE_STORAGE_KEY in src/.
+      ;(function () {
+        var root = document.documentElement
+        try {
+          var theme = localStorage.getItem("terna.theme")
+          if (theme === "system") {
+            theme = matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+          }
+          if (theme === "light") {
+            root.classList.replace("dark", "light")
+            root.style.colorScheme = "light"
+            document
+              .querySelector('meta[name="theme-color"]')
+              .setAttribute("content", "#ffffff")
+          }
+          var lang = localStorage.getItem("terna.lang")
+          if (lang === "es" || lang === "en") {
+            root.lang = lang
+          }
+        } catch (error) {
+          // Storage unavailable: keep the dark default.
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
