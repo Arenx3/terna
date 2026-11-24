@@ -33,6 +33,7 @@ generate() {
 
 generate django_secret_key 64
 generate postgres_password 32
+generate postgres_app_password 32
 generate redis_password 32
 generate storage_access_key 20
 generate storage_secret_key 40

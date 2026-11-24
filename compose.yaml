@@ -16,8 +16,10 @@ x-backend-environment: &backend-environment
   DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:${TERNA_HTTP_PORT:-8080}}
   POSTGRES_HOST: postgres
   POSTGRES_DB: terna
-  POSTGRES_USER: terna
-  POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+  # The app connects as an unprivileged role, so row-level security always applies to it.
+  POSTGRES_USER: terna_app
+  POSTGRES_PASSWORD_FILE: /run/secrets/postgres_app_password
+  POSTGRES_APP_USER: terna_app
   REDIS_HOST: redis
   REDIS_PASSWORD_FILE: /run/secrets/redis_password
   STORAGE_ENDPOINT_URL: ${STORAGE_ENDPOINT_URL:-http://storage:9000}
@@ -35,6 +37,13 @@ x-backend-environment: &backend-environment
   EMAIL_USE_TLS: ${EMAIL_USE_TLS:-false}
   DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-Terna <no-reply@terna.localhost>}
   LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+# Migrations (and the test runner, which creates its own database) use the owner role.
+x-migration-environment: &migration-environment
+  <<: *backend-environment
+  POSTGRES_USER: terna
+  POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+  POSTGRES_APP_PASSWORD_FILE: /run/secrets/postgres_app_password
 
 x-backend: &backend
   build:
@@ -162,9 +171,11 @@ services:
     restart: unless-stopped
     logging: *logging
 
-  # One-shot: applies migrations and creates the bucket before anything else uses them.
+  # One-shot: creates the app database role, applies migrations (which enable
+  # row-level security) and creates the bucket, before anything else uses them.
   bootstrap:
     <<: *backend
+    environment: *migration-environment
     command: ["python", "manage.py", "bootstrap"]
     restart: "no"
     depends_on:
@@ -259,6 +270,8 @@ services:
       context: ./backend
       target: test
     image: terna-backend-test:dev
+    # Owner role to create the test database; each test then switches to the app role.
+    environment: *migration-environment
     command: ["pytest"]
     restart: "no"
     depends_on:

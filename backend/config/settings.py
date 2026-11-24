@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "core",
+    "tenancy",
 ]
 
 MIDDLEWARE = [
@@ -60,9 +61,15 @@ DATABASES = {
         "USER": env("POSTGRES_USER", "terna"),
         "PASSWORD": env("POSTGRES_PASSWORD"),
         "CONN_HEALTH_CHECKS": True,
+        # Each request is one transaction: the active company (SET LOCAL) lives exactly that long.
+        "ATOMIC_REQUESTS": True,
         "OPTIONS": {"connect_timeout": 3},
     }
 }
+
+# The unprivileged role the app and workers connect as. Row-level security applies
+# to it; only the migration role (POSTGRES_USER of the bootstrap service) bypasses it.
+DATABASE_APP_ROLE = env("POSTGRES_APP_USER", "terna_app")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

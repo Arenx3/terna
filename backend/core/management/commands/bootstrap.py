@@ -4,8 +4,11 @@ from botocore.exceptions import BotoCoreError, ClientError
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
+from django.db import connection
 
+from config.env import env
 from core.storage import s3_client
+from tenancy.db import ensure_app_role
 
 STORAGE_ATTEMPTS = 10
 STORAGE_RETRY_SECONDS = 3
@@ -13,11 +16,24 @@ MISSING_BUCKET_CODES = {"404", "NoSuchBucket", "NotFound"}
 
 
 class Command(BaseCommand):
-    help = "Apply migrations and create the storage bucket. Safe to run on every start."
+    help = (
+        "Create the app database role, apply migrations and create the storage bucket. "
+        "Runs as the migration role. Safe to run on every start."
+    )
 
     def handle(self, *args, **options):
+        self.ensure_app_role()
         call_command("migrate", interactive=False, verbosity=options["verbosity"])
         self.ensure_bucket()
+
+    def ensure_app_role(self) -> None:
+        role = settings.DATABASE_APP_ROLE
+        if role == connection.settings_dict["USER"]:
+            self.stdout.write("App and migration roles are the same; skipping role setup.")
+            return
+        password = env("POSTGRES_APP_PASSWORD")
+        ensure_app_role(connection, role, password, connection.settings_dict["NAME"])
+        self.stdout.write(f"Database role {role!r} is ready.")
 
     def ensure_bucket(self) -> None:
         bucket = settings.STORAGE_BUCKET
