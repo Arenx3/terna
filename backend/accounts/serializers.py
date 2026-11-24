@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
-from accounts.models import User, normalize_email
+from accounts.models import Invitation, Membership, User, normalize_email
 
 
 def check_password_strength(password: str, user: User) -> None:
@@ -73,3 +73,57 @@ class SessionSerializer(serializers.Serializer):
 class DetailSerializer(serializers.Serializer):
     detail = serializers.CharField()
     code = serializers.CharField(required=False)
+
+
+ROLE_CHOICES = Membership.Role.choices
+INVITATION_STATUSES = ["valid", "expired", "used", "revoked"]
+
+
+class MemberUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "full_name", "email"]
+
+
+class MemberSerializer(serializers.ModelSerializer):
+    user = MemberUserSerializer(read_only=True)
+
+    class Meta:
+        model = Membership
+        fields = ["id", "user", "role", "created_at"]
+
+
+class RoleSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=ROLE_CHOICES)
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    invited_by = serializers.CharField(source="invited_by.full_name", default=None, read_only=True)
+
+    class Meta:
+        model = Invitation
+        fields = ["id", "email", "role", "invited_by", "expires_at", "created_at"]
+
+
+class InviteSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+    role = serializers.ChoiceField(choices=ROLE_CHOICES)
+
+
+class InvitationPreviewSerializer(serializers.Serializer):
+    company_name = serializers.CharField()
+    email = serializers.EmailField()
+    role = serializers.ChoiceField(choices=ROLE_CHOICES)
+    status = serializers.ChoiceField(choices=INVITATION_STATUSES)
+    account_exists = serializers.BooleanField()
+
+
+class AcceptInvitationSerializer(serializers.Serializer):
+    full_name = serializers.CharField(max_length=150, required=False, trim_whitespace=True)
+    password = serializers.CharField(
+        write_only=True, required=False, trim_whitespace=False, max_length=128
+    )
+
+
+class SwitchCompanySerializer(serializers.Serializer):
+    company_id = serializers.UUIDField()

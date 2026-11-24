@@ -1,35 +1,7 @@
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test } from "@playwright/test"
 
+import { logIn, PASSWORD, signUp, verify } from "./helpers.ts"
 import { appLink, uniqueEmail, waitForEmail } from "./mailpit.ts"
-
-const PASSWORD = "e2e-correct-horse-battery-7"
-
-async function signUp(page: Page, email: string) {
-  await page.goto("/signup")
-  await page.getByLabel("Company name").fill("Acme E2E")
-  await page.getByLabel("Your full name").fill("Ana Pérez")
-  await page.getByLabel("Work email").fill(email)
-  await page.getByLabel("Password").fill(PASSWORD)
-  await page.getByRole("button", { name: "Create account" }).click()
-  await expect(
-    page.getByRole("heading", { name: "Check your inbox" })
-  ).toBeVisible()
-}
-
-async function verify(page: Page, email: string) {
-  const message = await waitForEmail(email, /Verify your email/)
-  await page.goto(appLink(message.text, "/verify-email"))
-  await expect(
-    page.getByRole("heading", { name: "Email confirmed" })
-  ).toBeVisible()
-}
-
-async function logIn(page: Page, email: string, password = PASSWORD) {
-  await page.goto("/login")
-  await page.getByLabel("Email").fill(email)
-  await page.getByLabel("Password").fill(password)
-  await page.getByRole("button", { name: "Log in" }).click()
-}
 
 test("sign up, confirm the email, log in, stay logged in, log out", async ({
   page,

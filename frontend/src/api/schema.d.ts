@@ -122,6 +122,28 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/auth/switch-company/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * @description New tokens for another company the person belongs to.
+     *
+     *     The current refresh cookie is revoked, so the previous company's session
+     *     cannot be resumed by replaying it.
+     */
+    post: operations["auth_switch_company_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/auth/verify-email/": {
     parameters: {
       query?: never
@@ -174,10 +196,118 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/invitations/{token}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Opened from the emailed link. Signing in is optional: it decides how to accept. */
+    get: operations["invitations_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/invitations/{token}/accept/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description Opened from the emailed link. Signing in is optional: it decides how to accept. */
+    post: operations["invitations_accept_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/team/invitations/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Base for views over the active company's data: members only. */
+    get: operations["team_invitations_list"]
+    put?: never
+    /** @description Base for views over the active company's data: members only. */
+    post: operations["team_invitations_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/team/invitations/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** @description Base for views over the active company's data: members only. */
+    delete: operations["team_invitations_destroy"]
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/team/members/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Base for views over the active company's data: members only. */
+    get: operations["team_members_list"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/team/members/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** @description Base for views over the active company's data: members only. */
+    delete: operations["team_members_destroy"]
+    options?: never
+    head?: never
+    /** @description Base for views over the active company's data: members only. */
+    patch: operations["team_members_partial_update"]
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    AcceptInvitation: {
+      full_name?: string
+      password?: string
+    }
     Company: {
       /** Format: uuid */
       id: string
@@ -193,15 +323,53 @@ export interface components {
       email: string
     }
     Health: {
-      status: components["schemas"]["StatusEnum"]
+      status: components["schemas"]["HealthStatusEnum"]
       checks: {
         [key: string]: components["schemas"]["HealthCheck"]
       }
     }
     HealthCheck: {
-      status: components["schemas"]["StatusEnum"]
+      status: components["schemas"]["HealthStatusEnum"]
       /** Format: double */
       latency_ms: number
+    }
+    /**
+     * @description * `ok` - ok
+     *     * `error` - error
+     * @enum {string}
+     */
+    HealthStatusEnum: "ok" | "error"
+    Invitation: {
+      readonly id: number
+      /** Format: email */
+      email: string
+      role: components["schemas"]["RoleEnum"]
+      readonly invited_by: string
+      /** Format: date-time */
+      expires_at: string
+      /** Format: date-time */
+      readonly created_at: string
+    }
+    InvitationPreview: {
+      company_name: string
+      /** Format: email */
+      email: string
+      role: components["schemas"]["RoleEnum"]
+      status: components["schemas"]["InvitationStatusEnum"]
+      account_exists: boolean
+    }
+    /**
+     * @description * `valid` - valid
+     *     * `expired` - expired
+     *     * `used` - used
+     *     * `revoked` - revoked
+     * @enum {string}
+     */
+    InvitationStatusEnum: "valid" | "expired" | "used" | "revoked"
+    Invite: {
+      /** Format: email */
+      email: string
+      role: components["schemas"]["RoleEnum"]
     }
     /**
      * @description * `en` - English
@@ -214,11 +382,36 @@ export interface components {
       email: string
       password: string
     }
+    Member: {
+      readonly id: number
+      readonly user: components["schemas"]["MemberUser"]
+      role: components["schemas"]["RoleEnum"]
+      /** Format: date-time */
+      readonly created_at: string
+    }
+    MemberUser: {
+      /** Format: uuid */
+      readonly id: string
+      full_name: string
+      /** Format: email */
+      email: string
+    }
     PasswordResetConfirm: {
       uid: string
       token: string
       password: string
     }
+    PatchedRole: {
+      role?: components["schemas"]["RoleEnum"]
+    }
+    /**
+     * @description * `admin` - Admin
+     *     * `recruiter` - Recruiter
+     *     * `hiring_manager` - Hiring manager
+     *     * `interviewer` - Interviewer
+     * @enum {string}
+     */
+    RoleEnum: "admin" | "recruiter" | "hiring_manager" | "interviewer"
     /** @description What the app needs after login or refresh: who, and in which company. */
     Session: {
       access: string
@@ -235,12 +428,10 @@ export interface components {
       /** @default en */
       language: components["schemas"]["LanguageEnum"]
     }
-    /**
-     * @description * `ok` - ok
-     *     * `error` - error
-     * @enum {string}
-     */
-    StatusEnum: "ok" | "error"
+    SwitchCompany: {
+      /** Format: uuid */
+      company_id: string
+    }
     Token: {
       token: string
     }
@@ -417,6 +608,31 @@ export interface operations {
       }
     }
   }
+  auth_switch_company_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SwitchCompany"]
+        "application/x-www-form-urlencoded": components["schemas"]["SwitchCompany"]
+        "multipart/form-data": components["schemas"]["SwitchCompany"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Session"]
+        }
+      }
+    }
+  }
   auth_verify_email_create: {
     parameters: {
       query?: never
@@ -490,6 +706,184 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Health"]
+        }
+      }
+    }
+  }
+  invitations_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        token: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["InvitationPreview"]
+        }
+      }
+    }
+  }
+  invitations_accept_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        token: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["AcceptInvitation"]
+        "application/x-www-form-urlencoded": components["schemas"]["AcceptInvitation"]
+        "multipart/form-data": components["schemas"]["AcceptInvitation"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Session"]
+        }
+      }
+    }
+  }
+  team_invitations_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Invitation"][]
+        }
+      }
+    }
+  }
+  team_invitations_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Invite"]
+        "application/x-www-form-urlencoded": components["schemas"]["Invite"]
+        "multipart/form-data": components["schemas"]["Invite"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Invitation"]
+        }
+      }
+    }
+  }
+  team_invitations_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  team_members_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Member"][]
+        }
+      }
+    }
+  }
+  team_members_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  team_members_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedRole"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedRole"]
+        "multipart/form-data": components["schemas"]["PatchedRole"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Member"]
         }
       }
     }

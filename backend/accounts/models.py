@@ -100,3 +100,47 @@ class Membership(TenantModel):
 
     def __str__(self) -> str:
         return f"{self.user_id} @ {self.company_id} ({self.role})"
+
+
+class Invitation(TenantModel):
+    """An emailed, single-use invitation to join a company with a role.
+
+    Only a hash of the token is stored: a database leak does not hand out
+    working invitation links.
+    """
+
+    email = models.EmailField(_("email"))
+    role = models.CharField(_("role"), max_length=20, choices=Membership.Role.choices)
+    language = models.CharField(
+        _("language"), max_length=5, choices=settings.LANGUAGES, default="en"
+    )
+    token_hash = models.CharField(max_length=64, unique=True, editable=False)
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="+",
+        verbose_name=_("invited by"),
+    )
+    expires_at = models.DateTimeField(_("expires at"))
+    accepted_at = models.DateTimeField(_("accepted at"), null=True, blank=True)
+    revoked_at = models.DateTimeField(_("revoked at"), null=True, blank=True)
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("invitation")
+        verbose_name_plural = _("invitations")
+        constraints = [  # noqa: RUF012 (Django API)
+            models.UniqueConstraint(
+                fields=["company", "email"],
+                condition=models.Q(accepted_at__isnull=True, revoked_at__isnull=True),
+                name="accounts_invitation_one_pending_per_email",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.email} -> {self.company_id} ({self.role})"
+
+    @property
+    def is_pending(self) -> bool:
+        return self.accepted_at is None and self.revoked_at is None

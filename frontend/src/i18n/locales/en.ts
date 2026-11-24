@@ -26,6 +26,76 @@ export const en = {
     signedInAs: "Signed in as",
     logout: "Log out",
   },
+  nav: {
+    label: "Main",
+    home: "Home",
+    team: "Team",
+  },
+  roles: {
+    admin: "Admin",
+    recruiter: "Recruiter",
+    hiring_manager: "Hiring manager",
+    interviewer: "Interviewer",
+  },
+  company: {
+    switch: "Switch company",
+    label: "Your companies",
+  },
+  team: {
+    title: "Team",
+    description: "Who has access to {{company}}, and what each person can do.",
+    members: "Members",
+    member: "Member",
+    role: "Role",
+    you: "You",
+    readOnly: "Only admins can invite people, change roles or remove members.",
+    changeRole: "Role for {{name}}",
+    remove: "Remove",
+    removeLabel: "Remove {{name}}",
+    removeTitle: "Remove {{name}} from {{company}}?",
+    removeDescription:
+      "They lose access right away. You can invite them again later.",
+    cancel: "Cancel",
+    confirmRemove: "Remove member",
+    invite: {
+      title: "Invite someone",
+      description:
+        "They'll get an email with a link to join. It expires in 7 days.",
+      email: "Email",
+      role: "Role",
+      submit: "Send invitation",
+      submitting: "Sending…",
+      sent: "Invitation sent to {{email}}.",
+    },
+    pending: {
+      title: "Pending invitations",
+      empty: "No pending invitations.",
+      expires: "Expires {{date}}",
+      revoke: "Revoke",
+      revokeLabel: "Revoke the invitation for {{email}}",
+    },
+  },
+  invitation: {
+    checking: "Checking your invitation…",
+    title: "Join {{company}}",
+    description: "You're invited as {{role}}, with {{email}}.",
+    createAccount: "Create your account to accept.",
+    fullName: "Your full name",
+    submit: "Accept and join",
+    submitting: "Joining…",
+    loginToAccept:
+      "You already have a Terna account. Log in as {{email}} to accept.",
+    login: "Log in to accept",
+    join: "Join {{company}}",
+    wrongAccount:
+      "This invitation is for {{email}}, but you're signed in as {{current}}.",
+    switchAccount: "Log out and use another account",
+    invalidTitle: "This invitation doesn't work",
+    expired: "It expired. Ask an admin to send you a new one.",
+    used: "It was already used. If that was you, log in.",
+    revoked: "An admin cancelled it. Ask them to invite you again.",
+    invalid: "The link is invalid or was copied incomplete.",
+  },
   home: {
     title: "Welcome, {{name}}",
     description:
@@ -114,6 +184,20 @@ export const en = {
     server: "Something went wrong on our side. Try again in a moment.",
     network: "Can't reach Terna. Check your connection and try again.",
     fields: "Check the highlighted fields.",
+    admin_required: "Only admins can do this.",
+    not_member: "You're no longer a member of this company.",
+    last_admin:
+      "A company needs at least one admin. Make someone else admin first.",
+    already_member: "This person is already on the team.",
+    invitation_invalid: "This invitation link is invalid.",
+    invitation_expired: "This invitation expired. Ask an admin for a new one.",
+    invitation_used: "This invitation was already used.",
+    invitation_revoked: "This invitation was cancelled.",
+    invitation_email_mismatch:
+      "This invitation is for a different email address.",
+    login_required: "Log in with the invited address to accept.",
+    account_details_required:
+      "Enter your name and a password to create your account.",
   },
   status: {
     title: "System status",

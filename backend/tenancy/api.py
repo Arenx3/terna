@@ -35,8 +35,12 @@ class TenantScopedMixin:
 
     _tenant_token: Token | None = None
 
-    def initial(self, request: Request, *args, **kwargs) -> None:
-        super().initial(request, *args, **kwargs)  # authentication, permissions, throttling
+    def perform_authentication(self, request: Request) -> None:
+        # Right after authentication and before permissions, so permission
+        # classes can already read tenant data (the caller's membership).
+        super().perform_authentication(request)
+        if not (request.user and request.user.is_authenticated):
+            return  # the permission check answers 401
         company_id = company_from_request(request)
         if company_id is None:
             raise PermissionDenied(_("Choose a company to continue."))

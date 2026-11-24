@@ -135,6 +135,8 @@ REST_FRAMEWORK = {
         "password_reset": "10/hour",
         "password_reset_email": "3/hour",
         "password_reset_confirm": "20/hour",
+        "invite": "50/hour",
+        "invitation": "60/hour",
     },
 }
 
@@ -185,6 +187,11 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
+    # Two fields are called "status"; name their enums explicitly.
+    "ENUM_NAME_OVERRIDES": {
+        "HealthStatusEnum": "core.serializers.STATUS_CHOICES",
+        "InvitationStatusEnum": "accounts.serializers.INVITATION_STATUSES",
+    },
 }
 
 # Celery: each worker consumes one queue, so a long transcription never delays an email.

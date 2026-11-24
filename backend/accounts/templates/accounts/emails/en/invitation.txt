@@ -1,0 +1,11 @@
+{% autoescape off %}Hi,
+
+{{ inviter }} invited you to join {{ company }} on Terna as {{ role }}.
+
+Accept the invitation here:
+{{ link }}
+
+The link expires in 7 days and works once. If you weren't expecting this, you can ignore this email.
+
+— Terna
+{% endautoescape %}

@@ -32,6 +32,17 @@ const KNOWN_CODES = [
   "invalid_link",
   "session_expired",
   "throttled",
+  "admin_required",
+  "not_member",
+  "last_admin",
+  "already_member",
+  "invitation_invalid",
+  "invitation_expired",
+  "invitation_used",
+  "invitation_revoked",
+  "invitation_email_mismatch",
+  "login_required",
+  "account_details_required",
 ] as const
 
 type KnownCode = (typeof KNOWN_CODES)[number]
