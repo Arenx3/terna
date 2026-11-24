@@ -4,6 +4,156 @@
  */
 
 export interface paths {
+  "/api/auth/login/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["auth_login_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/logout/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["auth_logout_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/me/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["auth_me_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/password-reset/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["auth_password_reset_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/password-reset/confirm/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["auth_password_reset_confirm_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/refresh/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * @description Rotates the refresh cookie and returns a fresh access token.
+     *
+     *     The membership is checked again, so removing someone from a company takes
+     *     effect within one access-token lifetime.
+     */
+    post: operations["auth_refresh_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/signup/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["auth_signup_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/verify-email/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["auth_verify_email_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/verify-email/resend/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["auth_verify_email_resend_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/health/": {
     parameters: {
       query?: never
@@ -28,6 +178,20 @@ export interface paths {
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    Company: {
+      /** Format: uuid */
+      id: string
+      name: string
+      role: string
+    }
+    Detail: {
+      detail: string
+      code?: string
+    }
+    Email: {
+      /** Format: email */
+      email: string
+    }
     Health: {
       status: components["schemas"]["StatusEnum"]
       checks: {
@@ -40,11 +204,54 @@ export interface components {
       latency_ms: number
     }
     /**
+     * @description * `en` - English
+     *     * `es` - Español
+     * @enum {string}
+     */
+    LanguageEnum: "en" | "es"
+    Login: {
+      /** Format: email */
+      email: string
+      password: string
+    }
+    PasswordResetConfirm: {
+      uid: string
+      token: string
+      password: string
+    }
+    /** @description What the app needs after login or refresh: who, and in which company. */
+    Session: {
+      access: string
+      user: components["schemas"]["User"]
+      company: components["schemas"]["Company"]
+      companies: components["schemas"]["Company"][]
+    }
+    Signup: {
+      company_name: string
+      full_name: string
+      /** Format: email */
+      email: string
+      password: string
+      /** @default en */
+      language: components["schemas"]["LanguageEnum"]
+    }
+    /**
      * @description * `ok` - ok
      *     * `error` - error
      * @enum {string}
      */
     StatusEnum: "ok" | "error"
+    Token: {
+      token: string
+    }
+    User: {
+      /** Format: uuid */
+      readonly id: string
+      /** Format: email */
+      email: string
+      full_name: string
+      language?: components["schemas"]["LanguageEnum"]
+    }
   }
   responses: never
   parameters: never
@@ -54,6 +261,212 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  auth_login_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Login"]
+        "application/x-www-form-urlencoded": components["schemas"]["Login"]
+        "multipart/form-data": components["schemas"]["Login"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Session"]
+        }
+      }
+    }
+  }
+  auth_logout_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  auth_me_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Session"]
+        }
+      }
+    }
+  }
+  auth_password_reset_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Email"]
+        "application/x-www-form-urlencoded": components["schemas"]["Email"]
+        "multipart/form-data": components["schemas"]["Email"]
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Detail"]
+        }
+      }
+    }
+  }
+  auth_password_reset_confirm_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PasswordResetConfirm"]
+        "application/x-www-form-urlencoded": components["schemas"]["PasswordResetConfirm"]
+        "multipart/form-data": components["schemas"]["PasswordResetConfirm"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Detail"]
+        }
+      }
+    }
+  }
+  auth_refresh_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Session"]
+        }
+      }
+    }
+  }
+  auth_signup_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Signup"]
+        "application/x-www-form-urlencoded": components["schemas"]["Signup"]
+        "multipart/form-data": components["schemas"]["Signup"]
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Detail"]
+        }
+      }
+    }
+  }
+  auth_verify_email_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Token"]
+        "application/x-www-form-urlencoded": components["schemas"]["Token"]
+        "multipart/form-data": components["schemas"]["Token"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Detail"]
+        }
+      }
+    }
+  }
+  auth_verify_email_resend_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Email"]
+        "application/x-www-form-urlencoded": components["schemas"]["Email"]
+        "multipart/form-data": components["schemas"]["Email"]
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Detail"]
+        }
+      }
+    }
+  }
   health_retrieve: {
     parameters: {
       query?: never

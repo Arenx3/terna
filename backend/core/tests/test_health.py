@@ -96,4 +96,4 @@ def test_api_is_closed_by_default(rf):
 
     response = Probe.as_view()(rf.get("/api/probe/"))
 
-    assert response.status_code == 403
+    assert response.status_code in (401, 403)

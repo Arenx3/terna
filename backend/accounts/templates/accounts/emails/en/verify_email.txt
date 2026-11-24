@@ -1,0 +1,10 @@
+{% autoescape off %}Hi {{ user.full_name }},
+
+Confirm your email address to finish setting up your Terna account:
+
+{{ link }}
+
+The link expires in 3 days. If you didn't create an account, you can ignore this email.
+
+— Terna
+{% endautoescape %}

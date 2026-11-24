@@ -1,0 +1,14 @@
+{% autoescape off %}Hi {{ user.full_name }},
+
+Someone tried to sign up for Terna with this email address, but it already has an account.
+
+If it was you, log in here:
+{{ login_link }}
+
+Forgot your password? Reset it here:
+{{ reset_link }}
+
+If it wasn't you, you can ignore this email. Your account hasn't changed.
+
+— Terna
+{% endautoescape %}

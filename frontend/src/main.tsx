@@ -5,6 +5,7 @@ import { RouterProvider } from "react-router/dom"
 
 import "./index.css"
 import "./i18n"
+import { SessionGate } from "@/components/route-guards"
 import { ThemeProvider } from "@/components/theme-provider"
 import { router } from "@/router"
 
@@ -26,7 +27,9 @@ createRoot(root).render(
   <StrictMode>
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <SessionGate>
+          <RouterProvider router={router} />
+        </SessionGate>
       </QueryClientProvider>
     </ThemeProvider>
   </StrictMode>

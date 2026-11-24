@@ -122,6 +122,7 @@ npm ci
 npm run dev          # http://localhost:5173, redirige /api al stack en :8080
 npm run lint && npm run typecheck && npm run build
 npm run api:types    # regenera el cliente tipado de la API tras cambios en el backend
+npm run test:e2e     # pruebas en navegador contra el stack (MAILPIT_URL si Mailpit no está en :8025)
 ```
 
 Toda cadena visible vive en `frontend/src/i18n/locales/` (inglés y español). El lint falla si un componente tiene texto fijo y la verificación de tipos falla si falta una clave en cualquiera de los dos idiomas.

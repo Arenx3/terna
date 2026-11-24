@@ -3,6 +3,7 @@ import { Link, Outlet } from "react-router"
 
 import { LanguageMenu } from "@/components/language-menu"
 import { ThemeMenu } from "@/components/theme-menu"
+import { UserMenu } from "@/components/user-menu"
 
 export function AppLayout() {
   const { t } = useTranslation()
@@ -27,6 +28,7 @@ export function AppLayout() {
           <div className="flex items-center gap-1">
             <LanguageMenu />
             <ThemeMenu />
+            <UserMenu />
           </div>
         </div>
       </header>

@@ -105,8 +105,7 @@ def grant_app_role(connection: BaseDatabaseWrapper, role: str) -> None:
         sql.SQL(
             "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO {}"
         ).format(role_id),
-        sql.SQL("GRANT EXECUTE ON FUNCTION {}() TO {}").format(
-            sql.Identifier(ALL_COMPANIES_FUNCTION), role_id
-        ),
+        # The SECURITY DEFINER helpers revoke PUBLIC access; only the app role may call them.
+        sql.SQL("GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO {}").format(role_id),
     ]
     _run(connection, statements)
