@@ -103,7 +103,7 @@ services:
     logging: *logging
 
   redis:
-    image: redis:8.8-alpine
+    image: redis:8.10-alpine
     user: redis
     # The password stays out of the command line: it goes into a config file at start.
     entrypoint:
