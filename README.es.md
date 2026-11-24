@@ -1,5 +1,7 @@
 # Terna
 
+[![CI](https://github.com/Arenx3/terna/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Arenx3/terna/actions/workflows/ci.yml)
+
 **De 300 CVs a tu terna, con evidencia.**
 
 Terna es un ATS (sistema de seguimiento de candidatos) multi-empresa construido sobre una idea: cada decisión de contratación debe apoyarse en evidencia visible. Evalúa los CVs requisito por requisito. Los candidatos responden las preguntas de preselección en texto, audio o video, como prefieran. Y ayuda al equipo a armar la *terna*: los tres finalistas que se presentan al hiring manager.
@@ -107,7 +109,10 @@ Los tests y el lint corren en contenedores, así que solo necesitas Docker:
 docker compose --profile test run --rm tests                  # tests del backend
 docker compose --profile test run --rm --no-deps tests \
   sh -c 'ruff check . && ruff format --check .'               # lint y formato
+python scripts/smoke_test.py                                  # revisión de punta a punta del stack corriendo
 ```
+
+La CI corre las mismas revisiones en cada pull request (lint, tests del backend, frontend y un smoke test del stack completo), y todas deben pasar antes de fusionar a `main`.
 
 El frontend corre en tu máquina con recarga en caliente, contra el stack levantado (Node 24):
 
