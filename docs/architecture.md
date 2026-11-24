@@ -19,7 +19,7 @@ Everything runs from a single `docker compose up`.
 | `storage` | RustFS, S3-compatible object storage for résumés, recordings and HLS output. |
 | `mailpit` | Local inbox that catches all outgoing email. |
 | `secrets-init` | Generates secrets on first start, so no configuration is required. |
-| `bootstrap` | One-shot: applies migrations and creates the storage bucket before the API and workers start. |
+| `bootstrap` | One-shot, as the database owner: creates the unprivileged app role, applies migrations (which enable row-level security) and creates the storage bucket before the API and workers start. |
 
 Each worker consumes its own queue. A long transcription never delays an email or an upload.
 
@@ -42,11 +42,15 @@ Each worker consumes its own queue. A long transcription never delays an email o
 
 ## Multi-tenancy
 
-- Every row of customer data carries a `company_id`. All tenants share one schema.
-- PostgreSQL row-level security policies compare that column to `app.company_id`. This setting is applied with `SET LOCAL` inside each request transaction and each Celery task.
-- Django connects with an unprivileged role, and tables use `FORCE ROW LEVEL SECURITY`. Without it, a table's owner bypasses the policies.
-- Django querysets also filter by company, as defense in depth.
-- Isolation is tested both through the API and with raw SQL.
+Decision record: [ADR-0001](adr/0001-multi-tenancy-with-row-level-security.md).
+
+- Every row of customer data carries a `company_id`. All tenants share one schema. Models with customer data subclass `TenantModel`.
+- PostgreSQL row-level security policies compare that column to `app_current_company()`, which reads `app.company_id`. This setting is applied with `SET LOCAL` inside each request transaction (`ATOMIC_REQUESTS`) and each Celery task (`@tenant_task`). With no company set, queries return no rows.
+- The API takes the company from the `company_id` claim of the access token (`TenantScopedMixin`). Switching company means a new token.
+- Django connects as `terna_app`: no superuser, no `BYPASSRLS`, owns no table. Tables use `FORCE ROW LEVEL SECURITY`, so even an owner would not bypass the policies. Only the bootstrap service, which runs migrations, uses the owner role.
+- Every `migrate` applies the policies to new tenant tables automatically. A test fails if a table is neither tenant-scoped nor declared global.
+- Django querysets also filter by company, in SQL, as defense in depth.
+- Isolation is tested through the API and with raw SQL, and the whole test suite runs as the app role.
 
 ## Events and audit
 
@@ -108,7 +112,6 @@ Models are downloaded once into a dedicated volume. No external API is called. T
 
 ## Planned decision records
 
-- Multi-tenancy with a shared schema and row-level security
 - Transactional outbox for domain events
 - PostgreSQL for search instead of a dedicated search engine
 - Local, deterministic AI only

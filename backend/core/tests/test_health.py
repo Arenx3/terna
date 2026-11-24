@@ -78,6 +78,17 @@ def test_health_answers_within_the_deadline_when_a_check_hangs(client, monkeypat
     assert elapsed < 1.5
 
 
+def test_health_opens_no_transaction(client, monkeypatch):
+    # No django_db mark: any database access from the view itself would raise.
+    # Under ATOMIC_REQUESTS that would turn a database outage into a 500 instead of a 503.
+    for name in health.CHECKS:
+        monkeypatch.setitem(health.CHECKS, name, lambda: None)
+
+    response = client.get(reverse("health"))
+
+    assert response.status_code == 200
+
+
 def test_api_is_closed_by_default(rf):
     class Probe(APIView):
         def get(self, request):

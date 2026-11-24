@@ -5,3 +5,4 @@ Significant architecture decisions, with their context and the alternatives cons
 | # | Decision | Status |
 |---|---|---|
 | [0000](0000-record-architecture-decisions.md) | Record architecture decisions | Accepted |
+| [0001](0001-multi-tenancy-with-row-level-security.md) | Multi-tenancy with a shared schema and row-level security | Accepted |
