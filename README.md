@@ -109,6 +109,18 @@ docker compose --profile test run --rm --no-deps tests \
   sh -c 'ruff check . && ruff format --check .'               # lint and formatting
 ```
 
+The frontend runs on the host with hot reload, against the running stack (Node 24):
+
+```bash
+cd frontend
+npm ci
+npm run dev          # http://localhost:5173, proxies /api to the stack on :8080
+npm run lint && npm run typecheck && npm run build
+npm run api:types    # regenerate the typed API client after backend changes
+```
+
+Every visible string lives in `frontend/src/i18n/locales/` (English and Spanish). The lint fails on hardcoded text in components, and the type check fails when a key is missing in either language.
+
 Install the Git hooks once with `pre-commit install` (via `pipx`, `uv tool` or `pip`). They run Ruff, keep `uv.lock` in sync and catch common mistakes before each commit.
 
 ## Documentation

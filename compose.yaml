@@ -231,6 +231,8 @@ services:
   nginx:
     build:
       context: ./nginx
+      additional_contexts:
+        frontend: ./frontend
     image: terna-nginx:dev
     ports:
       - "127.0.0.1:${TERNA_HTTP_PORT:-8080}:80"
