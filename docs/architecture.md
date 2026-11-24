@@ -19,6 +19,7 @@ Everything runs from a single `docker compose up`.
 | `storage` | RustFS, S3-compatible object storage for résumés, recordings and HLS output. |
 | `mailpit` | Local inbox that catches all outgoing email. |
 | `secrets-init` | Generates secrets on first start, so no configuration is required. |
+| `bootstrap` | One-shot: applies migrations and creates the storage bucket before the API and workers start. |
 
 Each worker consumes its own queue. A long transcription never delays an email or an upload.
 

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Terna</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font: 15px/1.6 system-ui, sans-serif;
+        background: #0b0b0c;
+        color: #e7e7e9;
+      }
+      main { max-width: 32rem; padding: 2rem; }
+      h1 { font-size: 1.25rem; margin: 0 0 0.5rem; }
+      p { color: #a1a1a8; margin: 0 0 1rem; }
+      a { color: #e7e7e9; }
+      ul { padding-left: 1.25rem; color: #a1a1a8; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Terna is running</h1>
+      <p>The stack is up. The web app lands here in a later release.</p>
+      <ul>
+        <li><a href="/healthz">API liveness</a></li>
+        <li><a href="http://localhost:8025">Mailpit inbox</a> (port 8025)</li>
+        <li><a href="http://localhost:9001/rustfs/console/">Storage console</a> (port 9001)</li>
+      </ul>
+    </main>
+  </body>
+</html>
