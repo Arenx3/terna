@@ -90,7 +90,9 @@ Models are downloaded once into a dedicated volume. No external API is called. T
 - **Rate limits** per client IP and per target address on every authentication endpoint.
 - **Emails** (verification, recovery) are sent by the default worker, in the person's language, with links signed at send time. Recovery links expire in 2 hours and work once.
 - **People are global** (`accounts_user`): one person can belong to several companies. Memberships are tenant data under row-level security; at login, when no company is active yet, a `SECURITY DEFINER` function lists one person's own memberships.
-- **Roles per company:** admin, recruiter, hiring manager, interviewer. A person can belong to several companies.
+- **Roles per company:** admin, recruiter, hiring manager, interviewer. The role is read from the membership on every request, never trusted from the token, so removing someone or changing their role takes effect immediately. Only admins invite, change roles or remove members, and every company keeps at least one admin: changes lock the company's admin memberships first, so two simultaneous demotions cannot both succeed.
+- **Invitations** are tenant data. Only a hash of the link token is stored; links expire after 7 days and work once. Accepting creates the account if needed (already verified: the link proves the address) or joins an existing one, which must be signed in as the invited address.
+- **Several companies per person:** switching issues new tokens for the other company, after checking the membership, and revokes the previous refresh token. The app then drops every cached query, so nothing from the previous company stays on screen.
 - **Candidates:** signed magic links, each limited to a single application and set to expire.
 - **Shared clips and Terna views:** signed, expiring links that are never indexed.
 

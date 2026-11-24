@@ -52,3 +52,31 @@ export function requestPasswordReset(email: string) {
 export function confirmPasswordReset(body: Schemas["PasswordResetConfirm"]) {
   return unwrap(api.POST("/api/auth/password-reset/confirm/", { body }))
 }
+
+export async function switchCompany(companyId: string) {
+  const session = await unwrap(
+    api.POST("/api/auth/switch-company/", { body: { company_id: companyId } })
+  )
+  sessionStore.set(session)
+  return session
+}
+
+export function previewInvitation(token: string) {
+  return unwrap(
+    api.GET("/api/invitations/{token}/", { params: { path: { token } } })
+  )
+}
+
+export async function acceptInvitation(
+  token: string,
+  body: Schemas["AcceptInvitation"] = {}
+) {
+  const session = await unwrap(
+    api.POST("/api/invitations/{token}/accept/", {
+      params: { path: { token } },
+      body,
+    })
+  )
+  sessionStore.set(session)
+  return session
+}

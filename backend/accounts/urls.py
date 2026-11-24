@@ -20,4 +20,5 @@ urlpatterns = [
         name="auth-password-reset-confirm",
     ),
     path("me/", views.MeView.as_view(), name="auth-me"),
+    path("switch-company/", views.SwitchCompanyView.as_view(), name="auth-switch-company"),
 ]

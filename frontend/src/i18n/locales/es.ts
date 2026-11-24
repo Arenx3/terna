@@ -27,6 +27,78 @@ export const es: Resources = {
     signedInAs: "Sesión iniciada como",
     logout: "Cerrar sesión",
   },
+  nav: {
+    label: "Principal",
+    home: "Inicio",
+    team: "Equipo",
+  },
+  roles: {
+    admin: "Administrador",
+    recruiter: "Reclutador",
+    hiring_manager: "Responsable de contratación",
+    interviewer: "Entrevistador",
+  },
+  company: {
+    switch: "Cambiar de empresa",
+    label: "Tus empresas",
+  },
+  team: {
+    title: "Equipo",
+    description:
+      "Quién tiene acceso a {{company}} y qué puede hacer cada persona.",
+    members: "Miembros",
+    member: "Miembro",
+    role: "Rol",
+    you: "Tú",
+    readOnly:
+      "Solo los administradores pueden invitar, cambiar roles o quitar miembros.",
+    changeRole: "Rol de {{name}}",
+    remove: "Quitar",
+    removeLabel: "Quitar a {{name}}",
+    removeTitle: "¿Quitar a {{name}} de {{company}}?",
+    removeDescription:
+      "Pierde el acceso de inmediato. Puedes volver a invitarle después.",
+    cancel: "Cancelar",
+    confirmRemove: "Quitar miembro",
+    invite: {
+      title: "Invita a alguien",
+      description:
+        "Recibirá un correo con un enlace para unirse. Vence en 7 días.",
+      email: "Correo",
+      role: "Rol",
+      submit: "Enviar invitación",
+      submitting: "Enviando…",
+      sent: "Invitación enviada a {{email}}.",
+    },
+    pending: {
+      title: "Invitaciones pendientes",
+      empty: "No hay invitaciones pendientes.",
+      expires: "Vence el {{date}}",
+      revoke: "Cancelar",
+      revokeLabel: "Cancelar la invitación de {{email}}",
+    },
+  },
+  invitation: {
+    checking: "Revisando tu invitación…",
+    title: "Únete a {{company}}",
+    description: "Te invitaron como {{role}}, con {{email}}.",
+    createAccount: "Crea tu cuenta para aceptar.",
+    fullName: "Tu nombre completo",
+    submit: "Aceptar y unirme",
+    submitting: "Uniéndote…",
+    loginToAccept:
+      "Ya tienes una cuenta en Terna. Inicia sesión como {{email}} para aceptar.",
+    login: "Iniciar sesión para aceptar",
+    join: "Unirme a {{company}}",
+    wrongAccount:
+      "Esta invitación es para {{email}}, pero iniciaste sesión como {{current}}.",
+    switchAccount: "Cerrar sesión y usar otra cuenta",
+    invalidTitle: "Esta invitación no funciona",
+    expired: "Venció. Pide a un administrador que te envíe una nueva.",
+    used: "Ya se usó. Si fuiste tú, inicia sesión.",
+    revoked: "Un administrador la canceló. Pídele que te invite de nuevo.",
+    invalid: "El enlace no es válido o se copió incompleto.",
+  },
   home: {
     title: "Hola, {{name}}",
     description:
@@ -118,6 +190,20 @@ export const es: Resources = {
     network:
       "No se puede conectar con Terna. Revisa tu conexión e inténtalo de nuevo.",
     fields: "Revisa los campos marcados.",
+    admin_required: "Solo los administradores pueden hacer esto.",
+    not_member: "Ya no eres miembro de esta empresa.",
+    last_admin:
+      "Una empresa necesita al menos un administrador. Primero haz administrador a otra persona.",
+    already_member: "Esta persona ya está en el equipo.",
+    invitation_invalid: "Este enlace de invitación no es válido.",
+    invitation_expired:
+      "Esta invitación venció. Pide una nueva a un administrador.",
+    invitation_used: "Esta invitación ya se usó.",
+    invitation_revoked: "Esta invitación se canceló.",
+    invitation_email_mismatch: "Esta invitación es para otro correo.",
+    login_required: "Inicia sesión con el correo invitado para aceptar.",
+    account_details_required:
+      "Escribe tu nombre y una contraseña para crear tu cuenta.",
   },
   status: {
     title: "Estado del sistema",

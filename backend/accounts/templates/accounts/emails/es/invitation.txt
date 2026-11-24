@@ -1,0 +1,11 @@
+{% autoescape off %}Hola:
+
+{{ inviter }} te invitó a unirte a {{ company }} en Terna como {{ role }}.
+
+Acepta la invitación aquí:
+{{ link }}
+
+El enlace vence en 7 días y solo funciona una vez. Si no esperabas este correo, puedes ignorarlo.
+
+— Terna
+{% endautoescape %}

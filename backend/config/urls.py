@@ -2,6 +2,7 @@ from django.db import transaction
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from accounts.team_urls import public_urlpatterns as invitation_urls
 from core.views import HealthView, liveness
 
 # These never touch tenant data. Outside ATOMIC_REQUESTS they open no transaction,
@@ -12,6 +13,8 @@ urlpatterns = [
     path("healthz", no_transaction(liveness), name="liveness"),
     path("api/health/", no_transaction(HealthView.as_view()), name="health"),
     path("api/auth/", include("accounts.urls")),
+    path("api/team/", include("accounts.team_urls")),
+    path("api/invitations/", include(invitation_urls)),
     path("api/schema/", no_transaction(SpectacularAPIView.as_view()), name="schema"),
     path(
         "api/docs/",

@@ -28,6 +28,7 @@ from accounts.serializers import (
     PasswordResetConfirmSerializer,
     SessionSerializer,
     SignupSerializer,
+    SwitchCompanySerializer,
     TokenSerializer,
     UserSerializer,
     check_password_strength,
@@ -228,6 +229,40 @@ class PasswordResetConfirmView(PublicAuthView):
             user.email_verified_at = timezone.now()
         user.save(update_fields=["password", "email_verified_at"])
         return Response({"detail": "Password updated. Log in with your new password."})
+
+
+class NotMember(exceptions.PermissionDenied):
+    default_detail = "You are not a member of this company."
+    default_code = "not_member"
+
+
+class SwitchCompanyView(APIView):
+    """New tokens for another company the person belongs to.
+
+    The current refresh cookie is revoked, so the previous company's session
+    cannot be resumed by replaying it.
+    """
+
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (IPRateThrottle,)
+    throttle_scope = "refresh"
+
+    @extend_schema(
+        request=SwitchCompanySerializer, responses={200: SessionSerializer}, tags=["auth"]
+    )
+    def post(self, request: Request) -> Response:
+        serializer = SwitchCompanySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        membership = sessions.membership_in(
+            request.user.id, serializer.validated_data["company_id"]
+        )
+        if membership is None:
+            raise NotMember
+        raw = request.COOKIES.get(settings.AUTH_REFRESH_COOKIE)
+        if raw:
+            with suppress(TokenError):
+                RefreshToken(raw).blacklist()
+        return session_response(request.user, membership)
 
 
 class MeView(APIView):
