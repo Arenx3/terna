@@ -114,7 +114,7 @@ python scripts/smoke_test.py                                  # revisión de pun
 
 La CI corre las mismas revisiones en cada pull request (lint, tests del backend, frontend y un smoke test del stack completo), y todas deben pasar antes de fusionar a `main`.
 
-El frontend corre en tu máquina con recarga en caliente, contra el stack levantado (Node 24):
+El frontend corre en tu máquina con recarga en caliente, contra el stack levantado (Node 24 o posterior; la CI y el build de Docker usan Node 26 LTS):
 
 ```bash
 cd frontend
