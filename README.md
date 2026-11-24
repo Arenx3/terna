@@ -114,7 +114,7 @@ python scripts/smoke_test.py                                  # end-to-end check
 
 CI runs the same checks on every pull request (lint, backend tests, frontend, and a smoke test of the full stack), and all of them must pass before merging to `main`.
 
-The frontend runs on the host with hot reload, against the running stack (Node 24):
+The frontend runs on the host with hot reload, against the running stack (Node 24 or later; CI and the Docker build use Node 26 LTS):
 
 ```bash
 cd frontend
