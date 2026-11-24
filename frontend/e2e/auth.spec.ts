@@ -95,6 +95,10 @@ test("recover a forgotten password", async ({ page }) => {
 
   await page.goto("/login")
   await page.getByRole("link", { name: "Forgot password?" }).click()
+  // Client-side navigation: wait for the new page, or the login form's field gets filled.
+  await expect(
+    page.getByRole("heading", { name: "Reset your password" })
+  ).toBeVisible()
   await page.getByLabel("Email").fill(email)
   await page.getByRole("button", { name: "Send reset link" }).click()
   await expect(

@@ -2,6 +2,7 @@ import pytest
 
 from accounts.models import Membership, User
 from accounts.tests.conftest import PASSWORD, link_in
+from accounts.throttles import IPRateThrottle
 from tenancy.context import all_company_ids, tenant_context
 from tenancy.models import Company
 
@@ -100,7 +101,9 @@ def test_requires_every_field(post, field):
     assert field in response.json()
 
 
-def test_is_rate_limited_per_ip(post):
+def test_is_rate_limited_per_ip(post, monkeypatch):
+    monkeypatch.setitem(IPRateThrottle.THROTTLE_RATES, "signup", "5/hour")  # whatever the env says
+
     statuses = [post(URL, signup_data(email=f"u{i}@acme.test")).status_code for i in range(6)]
 
     assert statuses[:5] == [202] * 5

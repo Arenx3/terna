@@ -39,6 +39,7 @@ x-backend-environment: &backend-environment
   # Links in emails point here. Behind HTTPS, also set AUTH_COOKIE_SECURE=true.
   PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:${TERNA_HTTP_PORT:-8080}}
   AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+  AUTH_SIGNUP_RATE: ${AUTH_SIGNUP_RATE:-5/hour}
   LOG_LEVEL: ${LOG_LEVEL:-INFO}
 
 # Migrations (and the test runner, which creates its own database) use the owner role.

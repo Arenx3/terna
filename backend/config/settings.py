@@ -124,7 +124,8 @@ REST_FRAMEWORK = {
     "UNAUTHENTICATED_USER": None,
     # Per client IP (IPRateThrottle) and per target address (EmailRateThrottle).
     "DEFAULT_THROTTLE_RATES": {
-        "signup": "5/hour",
+        # Overridable so end-to-end runs, which sign up repeatedly, are not throttled.
+        "signup": env("AUTH_SIGNUP_RATE", "5/hour"),
         "login": "20/min",
         "login_email": "5/min",
         "refresh": "60/min",
