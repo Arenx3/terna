@@ -9,6 +9,7 @@ from core.storage import s3_client
 
 STORAGE_ATTEMPTS = 10
 STORAGE_RETRY_SECONDS = 3
+MISSING_BUCKET_CODES = {"404", "NoSuchBucket", "NotFound"}
 
 
 class Command(BaseCommand):
@@ -27,7 +28,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"Bucket {bucket!r} already exists.")
                 return
             except ClientError as exc:
-                if exc.response.get("Error", {}).get("Code") not in {"404", "NoSuchBucket", "NotFound"}:
+                if exc.response.get("Error", {}).get("Code") not in MISSING_BUCKET_CODES:
                     error: Exception = exc
                 else:
                     client.create_bucket(Bucket=bucket)

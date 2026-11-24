@@ -6,10 +6,52 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "boto3>=1.35,<2",
     "celery[redis]>=5.5,<6",
+    "channels>=4.2,<5",
+    "channels-redis>=4.2,<5",
     "django>=5.2,<5.3",
+    "djangorestframework>=3.16,<4",
+    "drf-spectacular>=0.28,<1",
+    "drf-spectacular-sidecar>=2025.1",
     "psycopg[binary]>=3.2,<4",
     "uvicorn[standard]>=0.30",
+    "whitenoise>=6.9,<7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.10",
+    "ruff>=0.17",
 ]
 
 [tool.uv]
 package = false
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "B",   # bugbear
+    "DJ",  # django
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "PT",  # pytest style
+    "RUF", # ruff-specific
+    "S",   # bandit (security)
+    "SIM", # simplify
+    "UP",  # pyupgrade
+    "W",   # pycodestyle warnings
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+addopts = "-ra --strict-markers -p no:cacheprovider"
+python_files = ["test_*.py"]
+markers = ["integration: needs the running stack (workers, broker)"]

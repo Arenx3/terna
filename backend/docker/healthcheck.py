@@ -1,8 +1,8 @@
 """Container healthchecks.
 
-    python docker/healthcheck.py http             # ASGI server answers /healthz
-    python docker/healthcheck.py worker <queue>   # Celery worker for <queue> answers a ping through the broker
-    python docker/healthcheck.py beat             # Celery beat ticked recently
+python docker/healthcheck.py http            # ASGI server answers /healthz
+python docker/healthcheck.py worker <queue>  # worker for <queue> answers a ping via the broker
+python docker/healthcheck.py beat            # Celery beat ticked recently
 """
 
 import os

@@ -18,14 +18,22 @@ DEBUG = env_bool("DJANGO_DEBUG", False)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:8080")
 
+# nginx always sets X-Forwarded-Proto, overwriting whatever the client sent.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.auth",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     "core",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
 
@@ -52,6 +60,7 @@ DATABASES = {
         "USER": env("POSTGRES_USER", "terna"),
         "PASSWORD": env("POSTGRES_PASSWORD"),
         "CONN_HEALTH_CHECKS": True,
+        "OPTIONS": {"connect_timeout": 3},
     }
 }
 
@@ -78,6 +87,35 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": redis_url(REDIS_DB_CACHE),
     }
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [redis_url(REDIS_DB_CHANNELS)]},
+    }
+}
+
+# API
+
+REST_FRAMEWORK = {
+    # Closed by default: every endpoint must opt out explicitly. Authentication arrives with #7.
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "UNAUTHENTICATED_USER": None,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Terna API",
+    "DESCRIPTION": "Applicant tracking with explainable screening and async video interviews.",
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # Swagger UI assets are bundled, so the docs work offline.
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
 }
 
 # Celery: each worker consumes one queue, so a long transcription never delays an email.
@@ -119,8 +157,12 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 LOGGING = {
     "version": 1,

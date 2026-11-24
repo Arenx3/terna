@@ -247,6 +247,23 @@ services:
     restart: unless-stopped
     logging: *logging
 
+  # Test runner, only with the `test` profile:
+  #   docker compose --profile test run --rm tests            # pytest
+  #   docker compose --profile test run --rm tests ruff check .
+  tests:
+    <<: *backend
+    profiles: ["test"]
+    build:
+      context: ./backend
+      target: test
+    image: terna-backend-test:dev
+    command: ["pytest"]
+    restart: "no"
+    depends_on:
+      <<: *backend-depends-on
+      storage:
+        condition: service_healthy
+
 volumes:
   secrets:
   postgres-data:
