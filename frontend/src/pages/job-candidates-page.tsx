@@ -1,8 +1,7 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeftIcon,
   CircleAlertIcon,
-  DownloadIcon,
   ExternalLinkIcon,
   UsersIcon,
 } from "lucide-react"
@@ -12,17 +11,24 @@ import { Link, useParams } from "react-router"
 
 import {
   jobApplicationsQuery,
-  resumeLink,
+  moveApplication,
   type JobApplication,
 } from "@/api/applications"
 import { currentCompanyQuery } from "@/api/careers"
+import { ApiError, errorMessage } from "@/api/errors"
 import { jobQuery } from "@/api/jobs"
 import { useRole } from "@/auth/roles"
 import { useSession } from "@/auth/session"
+import {
+  JobBoard,
+  type BoardStage,
+  type MoveRequest,
+} from "@/components/board/job-board"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { JobTabs } from "@/components/jobs/job-tabs"
 import { useStageLabel } from "@/components/jobs/stages-editor"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Empty,
   EmptyContent,
@@ -31,19 +37,36 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  useBoardChannel,
+  type BoardUpdate,
+  type ChannelStatus,
+  type Viewer,
+} from "@/hooks/use-board-channel"
 import { useDocumentTitle } from "@/hooks/use-document-title"
-import { initials, relativeTime } from "@/lib/format"
+import { initials } from "@/lib/format"
+import { cn } from "@/lib/utils"
 
-/**
- * Who applied to a job. The real-time board (#29) grows out of this list;
- * for now it answers "who is here, and where is their résumé".
- */
+function upsert(list: JobApplication[] | undefined, next: JobApplication) {
+  const current = list ?? []
+  return current.some((item) => item.id === next.id)
+    ? current.map((item) => (item.id === next.id ? next : item))
+    : [next, ...current]
+}
+
+/** Who applied to a job, as a live board: everyone's moves show up as they happen. */
 export function JobCandidatesPage() {
   const { t } = useTranslation()
   const { jobId = "" } = useParams()
   const { session } = useSession()
-  const { canSeeJobs } = useRole()
+  const { canSeeJobs, canManageJobs } = useRole()
+  const queryClient = useQueryClient()
+  const label = useStageLabel()
   const companyId = session?.company.id ?? ""
+  const listKey = jobApplicationsQuery(companyId, jobId).queryKey
+  const [announcement, setAnnouncement] = useState("")
+  const [failure, setFailure] = useState<string | null>(null)
+
   const job = useQuery({ ...jobQuery(companyId, jobId), enabled: canSeeJobs })
   const applications = useQuery({
     ...jobApplicationsQuery(companyId, jobId),
@@ -58,6 +81,69 @@ export function JobCandidatesPage() {
       ? `${t("candidates.tab")} · ${job.data.title}`
       : t("candidates.tab")
   )
+
+  const { viewers, status } = useBoardChannel(jobId, {
+    onReady: () => void queryClient.invalidateQueries({ queryKey: listKey }),
+    onUpdate: (update: BoardUpdate) => {
+      queryClient.setQueryData(listKey, (list: JobApplication[] | undefined) =>
+        upsert(list, update.application)
+      )
+      if (update.by.id === session?.user.id) return // our own move, already announced
+      const name = update.application.candidate.full_name
+      setAnnouncement(
+        update.event === "application.submitted"
+          ? t("board.added", { name })
+          : t("board.movedBy", {
+              by: update.by.name,
+              name,
+              stage: label(update.application.stage),
+            })
+      )
+    },
+  })
+
+  const move = useMutation({
+    mutationFn: ({ application, stage, reason, note }: MoveRequest) =>
+      moveApplication(application.id, {
+        stage: stage.id,
+        from_stage: application.stage.id,
+        reason: reason ?? "",
+        note: note ?? "",
+      }),
+    onMutate: async ({ application, stage, reason }: MoveRequest) => {
+      setFailure(null)
+      await queryClient.cancelQueries({ queryKey: listKey })
+      const previous = queryClient.getQueryData<JobApplication[]>(listKey)
+      queryClient.setQueryData(listKey, (list: JobApplication[] | undefined) =>
+        upsert(list, {
+          ...application,
+          stage: { id: stage.id, name: stage.name, kind: stage.kind },
+          stage_entered_at: new Date().toISOString(),
+          rejection_reason: reason ?? "",
+        })
+      )
+      setAnnouncement(
+        t("board.moved", {
+          name: application.candidate.full_name,
+          stage: label(stage),
+        })
+      )
+      return { previous }
+    },
+    onError: (error, { application }, context) => {
+      queryClient.setQueryData(listKey, context?.previous)
+      setFailure(
+        error instanceof ApiError && error.code === "stage_changed"
+          ? errorMessage(t, error)
+          : t("board.moveFailed", { name: application.candidate.full_name })
+      )
+      void queryClient.invalidateQueries({ queryKey: listKey })
+    },
+    onSuccess: (saved) =>
+      queryClient.setQueryData(listKey, (list: JobApplication[] | undefined) =>
+        upsert(list, saved)
+      ),
+  })
 
   const back = (
     <Link
@@ -80,30 +166,47 @@ export function JobCandidatesPage() {
     )
   }
 
+  const stages = (job.data?.stages ?? []).filter(
+    (stage): stage is BoardStage => typeof stage.id === "number"
+  )
+  const others = viewers.filter((viewer) => viewer.user.id !== session?.user.id)
   const postingUrl =
     company.data && job.data?.status === "open"
       ? `/careers/${company.data.slug}/jobs/${jobId}`
       : null
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-4">
         {back}
-        {job.data ? (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 className="min-w-0 text-[28px] leading-tight font-semibold tracking-[-0.03em] break-words">
-              {job.data.title}
-            </h1>
-            <JobStatusBadge status={job.data.status} />
-          </div>
-        ) : (
-          <Skeleton className="h-8 w-72" />
-        )}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {job.data ? (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="min-w-0 text-[28px] leading-tight font-semibold tracking-[-0.03em] break-words">
+                {job.data.title}
+              </h1>
+              <JobStatusBadge status={job.data.status} />
+            </div>
+          ) : (
+            <Skeleton className="h-8 w-72" />
+          )}
+          <Presence status={status} others={others} />
+        </div>
         <JobTabs jobId={jobId} />
       </header>
 
-      {applications.isPending ? (
-        <ListSkeleton />
+      <span role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </span>
+      {failure ? (
+        <Alert variant="destructive">
+          <CircleAlertIcon aria-hidden="true" />
+          <AlertDescription>{failure}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {applications.isPending || job.isPending ? (
+        <BoardSkeleton />
       ) : applications.isError ? (
         <p role="alert" className="flex items-center gap-2 text-sm">
           <CircleAlertIcon
@@ -135,92 +238,82 @@ export function JobCandidatesPage() {
           ) : null}
         </Empty>
       ) : (
-        <ul className="divide-y overflow-hidden rounded-xl border bg-card">
-          {applications.data.map((application) => (
-            <CandidateRow key={application.id} application={application} />
-          ))}
-        </ul>
+        <JobBoard
+          stages={stages}
+          applications={applications.data}
+          canMove={canManageJobs}
+          onMove={(request) => move.mutate(request)}
+        />
       )}
     </div>
   )
 }
 
-function CandidateRow({ application }: { application: JobApplication }) {
-  const { t, i18n } = useTranslation()
-  const stageLabel = useStageLabel()
-  const [opening, setOpening] = useState(false)
-  const { candidate, resume } = application
-
-  async function download() {
-    setOpening(true)
-    try {
-      // An attachment: the browser downloads it and stays on this page.
-      window.location.assign(await resumeLink(application.id))
-    } finally {
-      setOpening(false)
-    }
-  }
-
+/** Whether the board is live, and who else is looking at it right now. */
+function Presence({
+  status,
+  others,
+}: {
+  status: ChannelStatus
+  others: Viewer[]
+}) {
+  const { t } = useTranslation()
+  const shown = others.slice(0, 4)
   return (
-    <li className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-5 py-3.5 md:grid-cols-[auto_minmax(0,1fr)_9rem_12rem_auto]">
-      <span
-        aria-hidden="true"
-        className="grid size-8 place-items-center rounded-full border bg-muted text-xs font-medium"
-      >
-        {initials(candidate.full_name)}
+    <div className="flex items-center gap-3">
+      {others.length > 0 ? (
+        <ul aria-label={t("board.alsoHere")} className="flex -space-x-1.5">
+          {shown.map((viewer) => (
+            <li
+              key={viewer.key}
+              title={viewer.user.name}
+              className="grid size-7 place-items-center rounded-full border-2 border-background bg-muted text-[10px] font-medium"
+            >
+              <span aria-hidden="true">{initials(viewer.user.name)}</span>
+              <span className="sr-only">{viewer.user.name}</span>
+            </li>
+          ))}
+          {others.length > shown.length ? (
+            <li className="grid size-7 place-items-center rounded-full border-2 border-background bg-muted text-[10px] text-muted-foreground">
+              {t("board.more", { count: others.length - shown.length })}
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
+      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "size-2 rounded-full",
+            status === "live" ? "bg-success" : "bg-faint-foreground/60"
+          )}
+        />
+        {status === "live"
+          ? t("board.live")
+          : status === "connecting"
+            ? t("board.connecting")
+            : t("board.offline")}
       </span>
-      <span className="flex min-w-0 flex-col">
-        <span className="truncate text-sm font-medium">
-          {candidate.full_name}
-        </span>
-        <span className="truncate text-[13px] text-muted-foreground">
-          {candidate.email}
-        </span>
-      </span>
-      <span className="hidden text-[13px] text-muted-foreground md:block">
-        {stageLabel(application.stage)}
-      </span>
-      <span className="hidden text-[13px] whitespace-nowrap text-faint-foreground md:block">
-        {t("candidates.applied", {
-          time: relativeTime(application.created_at, i18n.language),
-        })}
-      </span>
-      {resume ? (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={opening}
-          onClick={() => void download()}
-          aria-label={t("candidates.downloadResume", {
-            name: candidate.full_name,
-          })}
-        >
-          <DownloadIcon data-icon="inline-start" aria-hidden="true" />
-          {t("candidates.resume")}
-        </Button>
-      ) : (
-        <span />
-      )}
-    </li>
+    </div>
   )
 }
 
-function ListSkeleton() {
+function BoardSkeleton() {
   const { t } = useTranslation()
   return (
     <div
       role="status"
       aria-label={t("app.loading")}
-      className="divide-y rounded-xl border"
+      className="flex gap-3 overflow-hidden"
     >
-      {[0, 1, 2].map((row) => (
-        <div key={row} className="flex items-center gap-4 px-5 py-4">
-          <Skeleton className="size-8 rounded-full" />
-          <div className="flex flex-1 flex-col gap-2">
-            <Skeleton className="h-3.5 w-48" />
-            <Skeleton className="h-3 w-40" />
-          </div>
-          <Skeleton className="h-7 w-16" />
+      {[0, 1, 2, 3].map((column) => (
+        <div
+          key={column}
+          className="flex w-64 shrink-0 flex-col gap-2 rounded-xl border p-2"
+        >
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
         </div>
       ))}
     </div>

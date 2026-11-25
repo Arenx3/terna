@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+  "/api/applications/{id}/move/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description Admins and recruiters move candidates; hiring managers watch their boards. */
+    post: operations["applications_move_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/applications/{id}/resume/": {
     parameters: {
       query?: never
@@ -637,6 +654,14 @@ export interface components {
        * Format: date-time
        */
       readonly created_at: string
+      /**
+       * In this stage since
+       * Format: date-time
+       */
+      readonly stage_entered_at: string
+      readonly rejection_reason:
+        | components["schemas"]["RejectionReasonEnum"]
+        | components["schemas"]["BlankEnum"]
     }
     ApplicationStage: {
       readonly id: number
@@ -685,6 +710,8 @@ export interface components {
       results: components["schemas"]["AuditEvent"][]
       next_before: number | null
     }
+    /** @enum {unknown} */
+    BlankEnum: ""
     CareersPage: {
       company: components["schemas"]["PublicCompany"]
       jobs: components["schemas"]["PublicJobSummary"][]
@@ -789,6 +816,7 @@ export interface components {
      *     * `invitation.sent` - Invitation sent
      *     * `invitation.revoked` - Invitation cancelled
      *     * `application.submitted` - Application submitted
+     *     * `application.stage_changed` - Application moved
      * @enum {string}
      */
     EventTypeEnum:
@@ -803,6 +831,7 @@ export interface components {
       | "invitation.sent"
       | "invitation.revoked"
       | "application.submitted"
+      | "application.stage_changed"
     /**
      * @description * `pdf` - PDF
      *     * `docx` - DOCX
@@ -978,6 +1007,16 @@ export interface components {
       /** Format: email */
       email: string
     }
+    MoveRequest: {
+      stage: number
+      from_stage: number
+      /** @default  */
+      reason:
+        | components["schemas"]["RejectionReasonEnum"]
+        | components["schemas"]["BlankEnum"]
+      /** @default  */
+      note: string
+    }
     PasswordResetConfirmRequest: {
       uid: string
       token: string
@@ -1080,6 +1119,22 @@ export interface components {
       currency: string
       period: components["schemas"]["SalaryPeriodEnum"]
     }
+    /**
+     * @description * `requirements` - Doesn't meet the requirements
+     *     * `other_candidate` - Another candidate was chosen
+     *     * `withdrew` - Withdrew
+     *     * `no_response` - Stopped responding
+     *     * `compensation` - Compensation expectations
+     *     * `other` - Other
+     * @enum {string}
+     */
+    RejectionReasonEnum:
+      | "requirements"
+      | "other_candidate"
+      | "withdrew"
+      | "no_response"
+      | "compensation"
+      | "other"
     Requirement: {
       id?: number | null
       text: string
@@ -1223,6 +1278,33 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  applications_move_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MoveRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["MoveRequest"]
+        "multipart/form-data": components["schemas"]["MoveRequest"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Application"]
+        }
+      }
+    }
+  }
   applications_resume_retrieve: {
     parameters: {
       query?: never

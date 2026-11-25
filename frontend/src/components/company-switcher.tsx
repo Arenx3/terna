@@ -86,12 +86,11 @@ export function CompanySwitcher() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton size="lg" aria-label={t("company.switch")} />
-            }
-          >
+          <DropdownMenuTrigger render={<SidebarMenuButton size="lg" />}>
             {identity}
+            {/* The visible name stays in the accessible name (WCAG 2.5.3), so
+                "click Acme" works for voice control; the purpose follows. */}
+            <span className="sr-only">{t("company.switch")}</span>
             <ChevronsUpDownIcon
               aria-hidden="true"
               className="ml-auto text-muted-foreground"

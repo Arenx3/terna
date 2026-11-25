@@ -52,9 +52,7 @@ export function UserMenu() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<SidebarMenuButton size="lg" aria-label={t("user.menu")} />}
-          >
+          <DropdownMenuTrigger render={<SidebarMenuButton size="lg" />}>
             <span
               aria-hidden="true"
               className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold"
@@ -70,6 +68,8 @@ export function UserMenu() {
                 {user.email}
               </span>
             </span>
+            {/* Visible name first, purpose after: label in name (WCAG 2.5.3). */}
+            <span className="sr-only">{t("user.menu")}</span>
             <ChevronsUpDownIcon
               aria-hidden="true"
               className="ml-auto text-muted-foreground"

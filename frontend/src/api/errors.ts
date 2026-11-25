@@ -54,6 +54,7 @@ const KNOWN_CODES = [
   "resume_too_large",
   "resume_wrong_type",
   "stage_in_use",
+  "stage_changed",
 ] as const
 
 type KnownCode = (typeof KNOWN_CODES)[number]

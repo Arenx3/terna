@@ -66,5 +66,6 @@ export function relativeTime(iso: string, language: string, now = Date.now()) {
       return format.format(Math.round(seconds / size), unit)
     }
   }
-  return format.format(0, "minute")
+  // Under a minute: "now" / "ahora", not "this minute".
+  return format.format(0, "second")
 }
