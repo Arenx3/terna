@@ -7,8 +7,11 @@ import { AcceptInvitationPage } from "@/pages/accept-invitation-page"
 import { CheckEmailPage } from "@/pages/check-email-page"
 import { ForgotPasswordPage } from "@/pages/forgot-password-page"
 import { HomePage } from "@/pages/home-page"
+import { JobEditorPage } from "@/pages/job-editor-page"
+import { JobsPage } from "@/pages/jobs-page"
 import { LoginPage } from "@/pages/login-page"
 import { NotFoundPage } from "@/pages/not-found-page"
+import { PipelinePage } from "@/pages/pipeline-page"
 import { ResetPasswordPage } from "@/pages/reset-password-page"
 import { SignupPage } from "@/pages/signup-page"
 import { TeamPage } from "@/pages/team-page"
@@ -22,7 +25,11 @@ export const router = createBrowserRouter([
         element: <AppShell />,
         children: [
           { index: true, element: <HomePage /> },
+          { path: "jobs", element: <JobsPage /> },
+          { path: "jobs/new", element: <JobEditorPage /> },
+          { path: "jobs/:jobId", element: <JobEditorPage /> },
           { path: "team", element: <TeamPage /> },
+          { path: "settings/pipeline", element: <PipelinePage /> },
         ],
       },
     ],

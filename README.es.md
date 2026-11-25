@@ -10,7 +10,7 @@ Toda la IA corre en tu propia máquina. Sin API keys, sin cuentas externas, sin 
 
 [Read in English](README.md)
 
-> **Estado:** en desarrollo, Fase 1 (cimientos). Las funciones de abajo son el roadmap. Cada una se marca al quedar lista.
+> **Estado:** en desarrollo, Fase 2 (ATS núcleo). Las funciones de abajo son el roadmap. Cada una se marca al quedar lista.
 
 ## Por qué
 
@@ -63,7 +63,7 @@ Detalles en [docs/architecture.md](docs/architecture.md) (en inglés).
 
 ## Roadmap
 
-- [ ] **Fase 1, Cimientos:** stack Docker sin configuración, CI, multi-empresa con row-level security, autenticación, roles e invitaciones, dirección de diseño
+- [x] **Fase 1, Cimientos:** stack Docker sin configuración, CI, multi-empresa con row-level security, autenticación, roles e invitaciones, dirección de diseño
 - [ ] **Fase 2, ATS núcleo:** vacantes con requisitos y etapas, página pública de empleo, postulaciones, pipeline kanban en tiempo real, perfil del candidato, correos, auditoría
 - [ ] **Fase 3, Screening explicable:** parsing de CV, ocultación de datos personales, matching por requisito con evidencia, correcciones del reclutador, revisión ciega
 - [ ] **Fase 4, Preselección asíncrona:** preguntas por vacante respondidas en texto, audio o video, grabador en el navegador, subida resumible, transcripción, búsqueda y clips
@@ -80,6 +80,8 @@ docker compose up -d --build --wait
 ```
 
 No necesita cuentas, API keys ni `.env`. Los secretos se generan en el primer arranque y se guardan en el volumen `terna_secrets`. Para cambiar un valor por defecto (puertos, proveedor de correo o de almacenamiento), copia `.env.example` a `.env`.
+
+El primer arranque también agrega datos demo: dos empresas ficticias con su equipo y algunas vacantes. Inicia sesión como **ana@acme.mx** con la contraseña **terna-demo-2026**. Usa `DEMO_DATA=false` en un despliegue real.
 
 **Requisitos:** Docker con Compose v2.24 o posterior. Asigna a Docker al menos 8 GB de memoria: los modelos de IA local de fases posteriores los necesitan.
 

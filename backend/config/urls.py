@@ -14,6 +14,7 @@ urlpatterns = [
     path("api/health/", no_transaction(HealthView.as_view()), name="health"),
     path("api/auth/", include("accounts.urls")),
     path("api/team/", include("accounts.team_urls")),
+    path("api/jobs/", include("jobs.urls")),
     path("api/invitations/", include(invitation_urls)),
     path("api/schema/", no_transaction(SpectacularAPIView.as_view()), name="schema"),
     path(

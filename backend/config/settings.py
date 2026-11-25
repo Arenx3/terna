@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     "core",
     "tenancy",
     "accounts",
+    "jobs",
+    "demo",
 ]
 
 MIDDLEWARE = [
@@ -183,6 +185,8 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Applicant tracking with explainable screening and async video interviews.",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Separate request and response shapes, so clients never have to send read-only fields.
+    "COMPONENT_SPLIT_REQUEST": True,
     # Swagger UI assets are bundled, so the docs work offline.
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
@@ -191,6 +195,9 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "HealthStatusEnum": "core.serializers.STATUS_CHOICES",
         "InvitationStatusEnum": "accounts.serializers.INVITATION_STATUSES",
+        "JobStatusEnum": "jobs.models.Job.Status",
+        "RequirementKindEnum": "jobs.models.Requirement.Kind",
+        "StageKindEnum": "jobs.models.StageKind",
     },
 }
 

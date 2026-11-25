@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 
-from config.env import env
+from config.env import env, env_bool
 from core.storage import s3_client
 from tenancy.db import ensure_app_role
 
@@ -17,14 +17,17 @@ MISSING_BUCKET_CODES = {"404", "NoSuchBucket", "NotFound"}
 
 class Command(BaseCommand):
     help = (
-        "Create the app database role, apply migrations and create the storage bucket. "
-        "Runs as the migration role. Safe to run on every start."
+        "Create the app database role, apply migrations, create the storage bucket and, "
+        "unless DEMO_DATA=false, add the demo data. Runs as the migration role. "
+        "Safe to run on every start."
     )
 
     def handle(self, *args, **options):
         self.ensure_app_role()
         call_command("migrate", interactive=False, verbosity=options["verbosity"])
         self.ensure_bucket()
+        if env_bool("DEMO_DATA", True):
+            call_command("seed_demo")
 
     def ensure_app_role(self) -> None:
         role = settings.DATABASE_APP_ROLE

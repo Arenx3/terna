@@ -7,5 +7,13 @@ import { useSession } from "@/auth/session"
 export function useRole() {
   const { session } = useSession()
   const role = session?.company.role
-  return { role, isAdmin: role === "admin" }
+  const isAdmin = role === "admin"
+  const canManageJobs = isAdmin || role === "recruiter"
+  return {
+    role,
+    isAdmin,
+    canManageJobs,
+    // Hiring managers see the jobs they own; interviewers only their interviews.
+    canSeeJobs: canManageJobs || role === "hiring_manager",
+  }
 }

@@ -1,8 +1,16 @@
-import { HouseIcon, SearchIcon, UsersIcon, type LucideIcon } from "lucide-react"
+import {
+  BriefcaseBusinessIcon,
+  HouseIcon,
+  SearchIcon,
+  UsersIcon,
+  WorkflowIcon,
+  type LucideIcon,
+} from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, NavLink, Outlet, useMatch } from "react-router"
 
+import { useRole } from "@/auth/roles"
 import { BrandMark } from "@/components/brand"
 import { CommandMenu } from "@/components/command-menu"
 import { CompanySwitcher } from "@/components/company-switcher"
@@ -63,6 +71,7 @@ function NavItem({
 
 export function AppShell() {
   const { t } = useTranslation()
+  const { canSeeJobs, canManageJobs } = useRole()
   const [commandOpen, setCommandOpen] = useState(false)
 
   useEffect(() => {
@@ -104,6 +113,13 @@ export function AppShell() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <NavItem to="/" end icon={HouseIcon} label={t("nav.home")} />
+                {canSeeJobs ? (
+                  <NavItem
+                    to="/jobs"
+                    icon={BriefcaseBusinessIcon}
+                    label={t("nav.jobs")}
+                  />
+                ) : null}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -112,6 +128,13 @@ export function AppShell() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <NavItem to="/team" icon={UsersIcon} label={t("nav.team")} />
+                {canManageJobs ? (
+                  <NavItem
+                    to="/settings/pipeline"
+                    icon={WorkflowIcon}
+                    label={t("nav.pipeline")}
+                  />
+                ) : null}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

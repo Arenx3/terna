@@ -44,10 +44,12 @@ class TenantManager(models.Manager):
 
     def __init__(self, field: str = "company_id") -> None:
         super().__init__()
-        self.field = field
+        # Not `self.field`: Django's related managers (job.requirements) set that
+        # attribute to the foreign key, which would break the filter below.
+        self.tenant_field = field
 
     def get_queryset(self) -> models.QuerySet:
-        return super().get_queryset().filter(**{self.field: CurrentCompany()})
+        return super().get_queryset().filter(**{self.tenant_field: CurrentCompany()})
 
 
 class Company(models.Model):

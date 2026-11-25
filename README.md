@@ -10,7 +10,7 @@ All AI runs on your own machine. No API keys, no external accounts, no cost.
 
 [Leer en español](README.es.md)
 
-> **Status:** in development, Phase 1 (foundations). The features below are the roadmap. Each one is checked off as it ships.
+> **Status:** in development, Phase 2 (core ATS). The features below are the roadmap. Each one is checked off as it ships.
 
 ## Why
 
@@ -63,7 +63,7 @@ Details in [docs/architecture.md](docs/architecture.md).
 
 ## Roadmap
 
-- [ ] **Phase 1, Foundations:** zero-config Docker stack, CI, multi-tenancy with row-level security, auth, roles and invitations, design direction
+- [x] **Phase 1, Foundations:** zero-config Docker stack, CI, multi-tenancy with row-level security, auth, roles and invitations, design direction
 - [ ] **Phase 2, Core ATS:** jobs with requirements and stages, public careers page, applications, real-time kanban pipeline, candidate profile, email, audit log
 - [ ] **Phase 3, Explainable screening:** résumé parsing, personal data redaction, requirement matching with evidence, recruiter overrides, blind review
 - [ ] **Phase 4, Async screening:** per-job questions answered in text, voice or video, in-browser recorder, resumable uploads, transcription, search and clips
@@ -80,6 +80,8 @@ docker compose up -d --build --wait
 ```
 
 No accounts, API keys or `.env` needed. Secrets are generated on first start and kept in the `terna_secrets` volume. To change a default (ports, email or storage provider), copy `.env.example` to `.env`.
+
+The first start also adds demo data: two fictional companies with a team and a few jobs. Sign in as **ana@acme.mx** with the password **terna-demo-2026**. Set `DEMO_DATA=false` for a real deployment.
 
 **Requirements:** Docker with Compose v2.24 or later. Give Docker at least 8 GB of memory: the local AI models in later phases need it.
 
