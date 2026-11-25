@@ -9,6 +9,7 @@ import { AcceptInvitationPage } from "@/pages/accept-invitation-page"
 import { ApplicationPage } from "@/pages/application-page"
 import { AuditPage } from "@/pages/audit-page"
 import { CareersPage } from "@/pages/careers-page"
+import { EmailsPage } from "@/pages/emails-page"
 import { CheckEmailPage } from "@/pages/check-email-page"
 import { ForgotPasswordPage } from "@/pages/forgot-password-page"
 import { HomePage } from "@/pages/home-page"
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
           { path: "team", element: <TeamPage /> },
           { path: "settings/pipeline", element: <PipelinePage /> },
           { path: "settings/audit", element: <AuditPage /> },
+          { path: "settings/emails", element: <EmailsPage /> },
         ],
       },
     ],

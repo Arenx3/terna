@@ -41,6 +41,7 @@ x-backend-environment: &backend-environment
   AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
   AUTH_SIGNUP_RATE: ${AUTH_SIGNUP_RATE:-5/hour}
   APPLY_RATE: ${APPLY_RATE:-20/hour}
+  AUTH_REFRESH_RATE: ${AUTH_REFRESH_RATE:-60/min}
   # Demo companies, team and jobs, added on start. Turn off for a real deployment.
   DEMO_DATA: ${DEMO_DATA:-true}
   DEMO_PASSWORD: ${DEMO_PASSWORD:-terna-demo-2026}

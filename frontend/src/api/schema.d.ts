@@ -51,6 +51,53 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/applications/{id}/emails/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    get: operations["applications_emails_list"]
+    put?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    post: operations["applications_emails_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/applications/{id}/emails/draft/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    get: operations["applications_emails_draft_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/applications/{id}/interviewers/": {
     parameters: {
       query?: never
@@ -391,6 +438,91 @@ export interface paths {
     get: operations["company_retrieve"]
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/email-templates/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    get: operations["email_templates_list"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/email-templates/{kind}/{language}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    put: operations["email_templates_update"]
+    post?: never
+    /** @description Back to Terna's default wording. */
+    delete: operations["email_templates_destroy"]
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/emails/{id}/cancel/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    post: operations["emails_cancel_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/emails/{id}/retry/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    post: operations["emails_retry_create"]
     delete?: never
     options?: never
     head?: never
@@ -927,10 +1059,44 @@ export interface components {
       detail: string
       code?: string
     }
+    Draft: {
+      kind: components["schemas"]["TemplateKindEnum"]
+      language: components["schemas"]["LanguageEnum"]
+      subject: string
+      body: string
+    }
+    EmailMessage: {
+      readonly id: number
+      readonly kind: components["schemas"]["TemplateKindEnum"]
+      readonly language: components["schemas"]["LanguageEnum"]
+      /** Format: email */
+      readonly to: string
+      readonly subject: string
+      readonly body: string
+      readonly status: components["schemas"]["EmailStatusEnum"]
+      /** Format: date-time */
+      readonly scheduled_for: string | null
+      /** Format: date-time */
+      readonly sent_at: string | null
+      readonly attempts: number
+      readonly failure_reason: string
+      /** Created by */
+      readonly created_by_name: string
+      /** Format: date-time */
+      readonly created_at: string
+    }
     EmailRequest: {
       /** Format: email */
       email: string
     }
+    /**
+     * @description * `queued` - Queued
+     *     * `sent` - Sent
+     *     * `failed` - Failed
+     *     * `canceled` - Canceled
+     * @enum {string}
+     */
+    EmailStatusEnum: "queued" | "sent" | "failed" | "canceled"
     /**
      * @description * `full_time` - Full-time
      *     * `part_time` - Part-time
@@ -955,7 +1121,9 @@ export interface components {
      *     * `application.assigned` - Interviewers assigned
      *     * `candidate.viewed` - Candidate profile viewed
      *     * `comment.created` - Comment added
+     *     * `email.queued` - Email written to a candidate
      *     * `email.sent` - Email sent to a candidate
+     *     * `email.failed` - Email to a candidate failed
      * @enum {string}
      */
     EventTypeEnum:
@@ -974,7 +1142,9 @@ export interface components {
       | "application.assigned"
       | "candidate.viewed"
       | "comment.created"
+      | "email.queued"
       | "email.sent"
+      | "email.failed"
     /**
      * @description * `pdf` - PDF
      *     * `docx` - DOCX
@@ -1173,6 +1343,13 @@ export interface components {
     NewCommentRequest: {
       body: string
       mentions?: string[]
+    }
+    NewEmailRequest: {
+      kind: components["schemas"]["TemplateKindEnum"]
+      subject: string
+      body: string
+      /** Format: date-time */
+      scheduled_for?: string | null
     }
     Notification: {
       readonly id: number
@@ -1470,6 +1647,36 @@ export interface components {
       readonly id: string
       readonly full_name: string
     }
+    Template: {
+      kind: components["schemas"]["TemplateKindEnum"]
+      language: components["schemas"]["LanguageEnum"]
+      subject: string
+      body: string
+      customized: boolean
+      variables: string[]
+      sample: {
+        [key: string]: string
+      }
+      /** Format: date-time */
+      updated_at: string | null
+      updated_by_name: string
+    }
+    TemplateInputRequest: {
+      subject: string
+      body: string
+    }
+    /**
+     * @description * `application_received` - Application received
+     *     * `stage_advanced` - Moved forward
+     *     * `rejection` - Not moving forward
+     *     * `interview_invitation` - Interview invitation
+     * @enum {string}
+     */
+    TemplateKindEnum:
+      | "application_received"
+      | "stage_advanced"
+      | "rejection"
+      | "interview_invitation"
     TimelineEvent: {
       readonly id: number
       readonly type: components["schemas"]["EventTypeEnum"]
@@ -1587,6 +1794,81 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Comment"]
+        }
+      }
+    }
+  }
+  applications_emails_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["EmailMessage"][]
+        }
+      }
+    }
+  }
+  applications_emails_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["NewEmailRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["NewEmailRequest"]
+        "multipart/form-data": components["schemas"]["NewEmailRequest"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["EmailMessage"]
+        }
+      }
+    }
+  }
+  applications_emails_draft_retrieve: {
+    parameters: {
+      query: {
+        kind:
+          | "application_received"
+          | "interview_invitation"
+          | "rejection"
+          | "stage_advanced"
+      }
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Draft"]
         }
       }
     }
@@ -2096,6 +2378,117 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["CurrentCompany"]
+        }
+      }
+    }
+  }
+  email_templates_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Template"][]
+        }
+      }
+    }
+  }
+  email_templates_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        kind: string
+        language: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TemplateInputRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["TemplateInputRequest"]
+        "multipart/form-data": components["schemas"]["TemplateInputRequest"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Template"]
+        }
+      }
+    }
+  }
+  email_templates_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        kind: string
+        language: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Template"]
+        }
+      }
+    }
+  }
+  emails_cancel_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["EmailMessage"]
+        }
+      }
+    }
+  }
+  emails_retry_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["EmailMessage"]
         }
       }
     }

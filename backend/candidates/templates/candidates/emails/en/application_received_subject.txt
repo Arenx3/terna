@@ -1,1 +1,0 @@
-{% autoescape off %}We received your application for {{ job }}{% endautoescape %}

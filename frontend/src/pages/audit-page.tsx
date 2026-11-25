@@ -315,6 +315,7 @@ function Entry({ entry }: { entry: AuditEvent }) {
     )
       ? (entry.payload as { interviewers: string[] }).interviewers.join(", ")
       : "",
+    title: typeof payload.subject === "string" ? payload.subject : "",
   })
   const actor = entry.actor_name || t("audit.system")
   const time = new Intl.DateTimeFormat(i18n.language, {

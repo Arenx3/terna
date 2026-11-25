@@ -99,6 +99,7 @@ jobs:
       # The end-to-end tests sign up several times, retries included.
       AUTH_SIGNUP_RATE: 100/hour
       APPLY_RATE: 100/hour
+      AUTH_REFRESH_RATE: 600/min
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
