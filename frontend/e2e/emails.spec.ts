@@ -61,7 +61,9 @@ test("the company writes its rejection email, and a rejected candidate gets it",
   await page.getByRole("link", { name: "Lucía Torres" }).click()
   const panel = page.getByRole("dialog", { name: "Lucía Torres" })
   await panel.getByRole("tab", { name: "Emails" }).click()
+  // In the Emails tab: the timeline mentions the same email in Activity.
   const sent = panel
+    .getByRole("tabpanel", { name: "Emails" })
     .getByRole("listitem")
     .filter({ hasText: "About Payroll Analyst" })
   await expect(async () => {
