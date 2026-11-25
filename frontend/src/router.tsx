@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router"
 
-import { AppLayout } from "@/components/app-layout"
+import { AppShell } from "@/components/app-shell"
+import { AuthLayout } from "@/components/auth-layout"
 import { GuestOnly, RequireAuth } from "@/components/route-guards"
 import { AcceptInvitationPage } from "@/pages/accept-invitation-page"
 import { CheckEmailPage } from "@/pages/check-email-page"
@@ -15,15 +16,20 @@ import { VerifyEmailPage } from "@/pages/verify-email-page"
 
 export const router = createBrowserRouter([
   {
-    element: <AppLayout />,
+    element: <RequireAuth />,
     children: [
       {
-        element: <RequireAuth />,
+        element: <AppShell />,
         children: [
           { index: true, element: <HomePage /> },
           { path: "team", element: <TeamPage /> },
         ],
       },
+    ],
+  },
+  {
+    element: <AuthLayout />,
+    children: [
       {
         element: <GuestOnly />,
         children: [

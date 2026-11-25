@@ -1,16 +1,8 @@
 import type { ReactNode } from "react"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { useDocumentTitle } from "@/hooks/use-document-title"
 
-/** The frame shared by the sign-in, sign-up and recovery screens. */
+/** The form column of the sign-in, sign-up and recovery screens: no card, the page is the surface. */
 export function AuthCard({
   title,
   description,
@@ -25,25 +17,23 @@ export function AuthCard({
   useDocumentTitle(title)
 
   return (
-    <div className="flex flex-1 items-start justify-center pt-6 sm:pt-12">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>
-            <h1 className="text-balance">{title}</h1>
-          </CardTitle>
-          {description ? (
-            <CardDescription className="text-pretty">
-              {description}
-            </CardDescription>
-          ) : null}
-        </CardHeader>
-        {children ? <CardContent>{children}</CardContent> : null}
-        {footer ? (
-          <CardFooter className="flex flex-wrap justify-center gap-1 text-sm text-muted-foreground">
-            {footer}
-          </CardFooter>
+    <div className="flex w-full max-w-[380px] flex-col gap-8">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-[28px] leading-[1.15] font-semibold tracking-[-0.025em]">
+          {title}
+        </h1>
+        {description ? (
+          <p className="text-[15px] leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         ) : null}
-      </Card>
+      </div>
+      {children}
+      {footer ? (
+        <div className="flex flex-wrap gap-1 text-sm text-muted-foreground">
+          {footer}
+        </div>
+      ) : null}
     </div>
   )
 }

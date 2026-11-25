@@ -10,8 +10,8 @@ const DEFAULT_THEME: Theme = "dark"
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
 // Browser chrome color: matches --background in each theme (index.css).
 const THEME_COLORS: Record<ResolvedTheme, string> = {
-  dark: "#0a0a0a",
-  light: "#ffffff",
+  dark: "#171512",
+  light: "#fbf9f5",
 }
 
 type ThemeProviderState = {

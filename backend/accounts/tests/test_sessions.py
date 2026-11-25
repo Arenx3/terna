@@ -130,10 +130,20 @@ def test_refresh_rotates_the_cookie_and_rejects_reuse(post, api, member):
     assert replay.json()["code"] == "session_expired"
 
 
-def test_refresh_without_cookie_is_rejected(post):
+def test_refresh_without_cookie_means_no_session(post):
+    response = post(REFRESH)
+
+    assert response.status_code == 204
+    assert not response.content
+
+
+def test_refresh_with_a_forged_cookie_is_rejected(post, api):
+    api.cookies[COOKIE] = "not-a-token"
+
     response = post(REFRESH)
 
     assert response.status_code == 401
+    assert response.json()["code"] == "session_expired"
 
 
 def test_refresh_stops_once_the_membership_is_removed(post, member):

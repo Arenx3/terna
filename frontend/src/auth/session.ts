@@ -51,7 +51,9 @@ export function refreshSession(): Promise<Session | null> {
     credentials: "same-origin",
   })
     .then(async (response) => {
-      const next = response.ok ? ((await response.json()) as Session) : null
+      // 200 carries a session; 204 means nobody is signed in; 401 means it expired.
+      const next =
+        response.status === 200 ? ((await response.json()) as Session) : null
       sessionStore.set(next)
       return next
     })
