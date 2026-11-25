@@ -13,6 +13,8 @@ from django.utils import timezone
 from accounts.models import Invitation, Membership, User, normalize_email
 from accounts.sessions import CompanyMembership, membership_in
 from accounts.tasks import send_invitation_email
+from events.models import EventType
+from events.outbox import emit
 from tenancy.context import tenant_context
 
 LIFETIME = timedelta(days=7)
@@ -90,16 +92,37 @@ def invite(*, email: str, role: str, invited_by: User, language: str) -> Invitat
             invited_by=invited_by,
             expires_at=timezone.now() + LIFETIME,
         )
+        emit(
+            EventType.INVITATION_SENT,
+            entity_type="invitation",
+            entity_id=invitation.id,
+            label=email,
+            payload={"role": role},
+        )
     company_id, invitation_id = str(invitation.company_id), invitation.id
     transaction.on_commit(lambda: send_invitation_email.delay(company_id, invitation_id, token))
     return invitation
 
 
 def revoke(invitation_id: int) -> bool:
-    updated = Invitation.objects.filter(
-        id=invitation_id, accepted_at__isnull=True, revoked_at__isnull=True
-    ).update(revoked_at=timezone.now())
-    return updated == 1
+    with transaction.atomic():
+        invitation = (
+            Invitation.objects.select_for_update()
+            .filter(id=invitation_id, accepted_at__isnull=True, revoked_at__isnull=True)
+            .first()
+        )
+        if invitation is None:
+            return False
+        invitation.revoked_at = timezone.now()
+        invitation.save(update_fields=["revoked_at"])
+        emit(
+            EventType.INVITATION_REVOKED,
+            entity_type="invitation",
+            entity_id=invitation.id,
+            label=invitation.email,
+            payload={"role": invitation.role},
+        )
+        return True
 
 
 def accept(
@@ -142,9 +165,20 @@ def accept(
         elif user.email != invitation.email:
             raise InvitationError("invitation_email_mismatch")
 
-        Membership.objects.get_or_create(user=user, defaults={"role": invitation.role})
+        membership, joined = Membership.objects.get_or_create(
+            user=user, defaults={"role": invitation.role}
+        )
         invitation.accepted_at = timezone.now()
         invitation.save(update_fields=["accepted_at"])
+        if joined:
+            emit(
+                EventType.MEMBER_JOINED,
+                entity_type="member",
+                entity_id=user.id,
+                label=user.full_name,
+                payload={"role": membership.role},
+                actor=user,
+            )
 
     membership = membership_in(user.id, lookup.company_id)
     if membership is None:  # created above in this same transaction

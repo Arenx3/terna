@@ -36,6 +36,7 @@ export const es: Resources = {
     team: "Equipo",
     jobs: "Vacantes",
     pipeline: "Pipeline",
+    audit: "Bitácora",
     workspace: "Trabajo",
     company: "Empresa",
     search: "Busca o ve a…",
@@ -427,6 +428,51 @@ export const es: Resources = {
     dropped: "Soltaste {{item}} en la posición {{position}} de {{total}}.",
     cancelled:
       "Se canceló el cambio. {{item}} volvió a la posición {{position}}.",
+  },
+  audit: {
+    title: "Bitácora",
+    description:
+      "Todo lo que cambió en {{company}}: quién lo hizo y cuándo. Las entradas no se pueden editar ni borrar.",
+    filters: "Filtrar la bitácora",
+    activity: "Actividad",
+    areas: {
+      all: "Toda la actividad",
+      job: "Vacantes",
+      member: "Equipo",
+      invitation: "Invitaciones",
+    },
+    person: "Persona",
+    everyone: "Todas las personas",
+    since: "Desde",
+    until: "Hasta",
+    clear: "Quitar filtros",
+    empty:
+      "Todavía no hay actividad. Aquí aparecerán los cambios en vacantes y en el equipo.",
+    emptyFiltered: "Nada coincide con estos filtros.",
+    loadMore: "Ver anteriores",
+    loadingMore: "Cargando…",
+    loadError: "No pudimos cargar la bitácora.",
+    retry: "Reintentar",
+    adminOnly: "Solo los admins pueden ver la bitácora.",
+    system: "Terna",
+    events: {
+      job: {
+        created: "{actor} creó la vacante {subject}",
+        published: "{actor} publicó {subject}",
+        reopened: "{actor} reabrió {subject}",
+        closed: "{actor} cerró {subject}",
+        deleted: "{actor} eliminó el borrador {subject}",
+      },
+      member: {
+        joined: "{actor} se unió al equipo como {{role}}",
+        role_changed: "{actor} cambió el rol de {subject} de {{from}} a {{to}}",
+        removed: "{actor} quitó a {subject} del equipo",
+      },
+      invitation: {
+        sent: "{actor} invitó a {subject} como {{role}}",
+        revoked: "{actor} canceló la invitación de {subject}",
+      },
+    },
   },
   notFound: {
     title: "No encontramos esta página",

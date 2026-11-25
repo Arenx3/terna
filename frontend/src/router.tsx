@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell"
 import { AuthLayout } from "@/components/auth-layout"
 import { GuestOnly, RequireAuth } from "@/components/route-guards"
 import { AcceptInvitationPage } from "@/pages/accept-invitation-page"
+import { AuditPage } from "@/pages/audit-page"
 import { CheckEmailPage } from "@/pages/check-email-page"
 import { ForgotPasswordPage } from "@/pages/forgot-password-page"
 import { HomePage } from "@/pages/home-page"
@@ -30,6 +31,7 @@ export const router = createBrowserRouter([
           { path: "jobs/:jobId", element: <JobEditorPage /> },
           { path: "team", element: <TeamPage /> },
           { path: "settings/pipeline", element: <PipelinePage /> },
+          { path: "settings/audit", element: <AuditPage /> },
         ],
       },
     ],

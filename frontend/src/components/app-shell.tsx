@@ -1,6 +1,7 @@
 import {
   BriefcaseBusinessIcon,
   HouseIcon,
+  ScrollTextIcon,
   SearchIcon,
   UsersIcon,
   WorkflowIcon,
@@ -71,7 +72,7 @@ function NavItem({
 
 export function AppShell() {
   const { t } = useTranslation()
-  const { canSeeJobs, canManageJobs } = useRole()
+  const { canSeeJobs, canManageJobs, isAdmin } = useRole()
   const [commandOpen, setCommandOpen] = useState(false)
 
   useEffect(() => {
@@ -133,6 +134,13 @@ export function AppShell() {
                     to="/settings/pipeline"
                     icon={WorkflowIcon}
                     label={t("nav.pipeline")}
+                  />
+                ) : null}
+                {isAdmin ? (
+                  <NavItem
+                    to="/settings/audit"
+                    icon={ScrollTextIcon}
+                    label={t("nav.audit")}
                   />
                 ) : null}
               </SidebarMenu>

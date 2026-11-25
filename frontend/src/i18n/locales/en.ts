@@ -35,6 +35,7 @@ export const en = {
     team: "Team",
     jobs: "Jobs",
     pipeline: "Pipeline",
+    audit: "Audit log",
     workspace: "Workspace",
     company: "Company",
     search: "Search or jump to…",
@@ -413,6 +414,51 @@ export const en = {
     dropped: "{{item}} dropped at position {{position}} of {{total}}.",
     cancelled:
       "Reordering cancelled. {{item}} is back at position {{position}}.",
+  },
+  audit: {
+    title: "Audit log",
+    description:
+      "Everything that changed in {{company}}: who did it and when. Entries can't be edited or deleted.",
+    filters: "Filter the audit log",
+    activity: "Activity",
+    areas: {
+      all: "All activity",
+      job: "Jobs",
+      member: "Team",
+      invitation: "Invitations",
+    },
+    person: "Person",
+    everyone: "Everyone",
+    since: "From",
+    until: "To",
+    clear: "Clear filters",
+    empty: "No activity yet. Changes to jobs and the team will show up here.",
+    emptyFiltered: "Nothing matches these filters.",
+    loadMore: "Show older",
+    loadingMore: "Loading…",
+    loadError: "Couldn't load the audit log.",
+    retry: "Try again",
+    adminOnly: "Only admins can read the audit log.",
+    system: "Terna",
+    events: {
+      job: {
+        created: "{actor} created the job {subject}",
+        published: "{actor} published {subject}",
+        reopened: "{actor} reopened {subject}",
+        closed: "{actor} closed {subject}",
+        deleted: "{actor} deleted the draft {subject}",
+      },
+      member: {
+        joined: "{actor} joined the team as {{role}}",
+        role_changed:
+          "{actor} changed {subject}'s role from {{from}} to {{to}}",
+        removed: "{actor} removed {subject} from the team",
+      },
+      invitation: {
+        sent: "{actor} invited {subject} as {{role}}",
+        revoked: "{actor} cancelled the invitation for {subject}",
+      },
+    },
   },
   notFound: {
     title: "Page not found",
