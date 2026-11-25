@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { CircleAlertIcon, MailIcon, UserMinusIcon, XIcon } from "lucide-react"
-import { useId, useState } from "react"
+import { useEffect, useId, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useLocation } from "react-router"
 
 import { errorMessage } from "@/api/errors"
 import {
@@ -65,7 +66,7 @@ export function TeamPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex max-w-2xl flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+        <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.03em]">
           {t("team.title")}
         </h1>
         <p className="text-pretty text-muted-foreground">
@@ -87,6 +88,7 @@ function InviteCard({ companyId }: { companyId: string }) {
   const queryClient = useQueryClient()
   const roleId = useId()
   const [sentTo, setSentTo] = useState<string | null>(null)
+  const location = useLocation()
 
   const { formRef, onSubmit, mutation, fieldErrors } = useApiForm(
     (values) => invite(values.email, values.role as Role),
@@ -101,8 +103,15 @@ function InviteCard({ companyId }: { companyId: string }) {
     }
   )
 
+  // "Invite someone" in ⌘K lands here: start typing the address right away.
+  useEffect(() => {
+    if (location.hash !== "#invite") return
+    const email = formRef.current?.elements.namedItem("email")
+    if (email instanceof HTMLInputElement) email.focus()
+  }, [location.key, location.hash, formRef])
+
   return (
-    <Card className="max-w-2xl">
+    <Card id="invite" className="max-w-2xl scroll-mt-20">
       <CardHeader>
         <CardTitle>
           <h2>{t("team.invite.title")}</h2>

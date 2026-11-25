@@ -159,9 +159,12 @@ class RefreshView(PublicAuthView):
 
     throttle_scope = "refresh"
 
-    @extend_schema(request=None, responses={200: SessionSerializer}, tags=["auth"])
+    @extend_schema(request=None, responses={200: SessionSerializer, 204: None}, tags=["auth"])
     def post(self, request: Request) -> Response:
         raw = request.COOKIES.get(settings.AUTH_REFRESH_COOKIE)
+        if not raw:
+            # A visitor who never signed in (or signed out) has no session: not an error.
+            return Response(status=status.HTTP_204_NO_CONTENT)
         try:
             refresh = RefreshToken(raw)  # checks signature, expiry and blacklist
         except TokenError as exc:

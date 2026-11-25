@@ -581,6 +581,13 @@ export interface operations {
           "application/json": components["schemas"]["Session"]
         }
       }
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   auth_signup_create: {
