@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { CircleAlertIcon, LockIcon, ScrollTextIcon } from "lucide-react"
-import { Fragment, useId, type ReactNode } from "react"
+import { useId, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { useSearchParams } from "react-router"
 
@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDocumentTitle } from "@/hooks/use-document-title"
 import { initials } from "@/lib/format"
+import { fillSlots } from "@/lib/slots"
 
 const ALL = "all" as const
 
@@ -39,17 +40,6 @@ function startOfDay(date: string, plusDays = 0) {
 
 function isArea(value: string | null): value is AuditArea {
   return AUDIT_AREAS.some((area) => area === value)
-}
-
-/**
- * A translated sentence with `{actor}` and `{subject}` slots filled by React
- * nodes. Names come from users, so they are never parsed as markup.
- */
-function fillSlots(sentence: string, slots: Record<string, ReactNode>) {
-  return sentence.split(/(\{actor\}|\{subject\})/).map((part, index) => {
-    const slot = /^\{(actor|subject)\}$/.exec(part)?.[1]
-    return <Fragment key={index}>{slot ? slots[slot] : part}</Fragment>
-  })
 }
 
 export function AuditPage() {

@@ -12,6 +12,7 @@ COMPANY_SETTING = "app.company_id"
 POLICY_NAME = "tenant_isolation"
 CURRENT_COMPANY_FUNCTION = "app_current_company"
 ALL_COMPANIES_FUNCTION = "app_all_company_ids"
+COMPANY_BY_SLUG_FUNCTION = "app_company_by_slug"
 
 
 def set_company(connection: BaseDatabaseWrapper, company_id: str) -> None:

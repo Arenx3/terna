@@ -197,6 +197,55 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/careers/{slug}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["careers_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/careers/{slug}/jobs/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["careers_jobs_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/company/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description The active company's profile: its name and public careers page slug. */
+    get: operations["company_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/health/": {
     parameters: {
       query?: never
@@ -520,11 +569,73 @@ export interface components {
       results: components["schemas"]["AuditEvent"][]
       next_before: number | null
     }
+    CareersPage: {
+      company: components["schemas"]["PublicCompany"]
+      jobs: components["schemas"]["PublicJobSummary"][]
+    }
     Company: {
       /** Format: uuid */
       id: string
       name: string
       role: string
+    }
+    /**
+     * @description * `MX` - MX
+     *     * `US` - US
+     *     * `CA` - CA
+     *     * `GT` - GT
+     *     * `SV` - SV
+     *     * `HN` - HN
+     *     * `NI` - NI
+     *     * `CR` - CR
+     *     * `PA` - PA
+     *     * `CU` - CU
+     *     * `DO` - DO
+     *     * `PR` - PR
+     *     * `CO` - CO
+     *     * `VE` - VE
+     *     * `EC` - EC
+     *     * `PE` - PE
+     *     * `BO` - BO
+     *     * `CL` - CL
+     *     * `AR` - AR
+     *     * `UY` - UY
+     *     * `PY` - PY
+     *     * `BR` - BR
+     *     * `ES` - ES
+     *     * `PT` - PT
+     * @enum {string}
+     */
+    CountryEnum:
+      | "MX"
+      | "US"
+      | "CA"
+      | "GT"
+      | "SV"
+      | "HN"
+      | "NI"
+      | "CR"
+      | "PA"
+      | "CU"
+      | "DO"
+      | "PR"
+      | "CO"
+      | "VE"
+      | "EC"
+      | "PE"
+      | "BO"
+      | "CL"
+      | "AR"
+      | "UY"
+      | "PY"
+      | "BR"
+      | "ES"
+      | "PT"
+    CurrentCompany: {
+      /** Format: uuid */
+      readonly id: string
+      readonly name: string
+      readonly slug: string
     }
     Detail: {
       detail: string
@@ -622,6 +733,7 @@ export interface components {
       title: string
       department?: string
       location?: string
+      country?: components["schemas"]["CountryEnum"]
       workplace?: components["schemas"]["WorkplaceEnum"]
       /** Employment type */
       employment?: components["schemas"]["EmploymentEnum"]
@@ -655,6 +767,7 @@ export interface components {
       title: string
       department?: string
       location?: string
+      country?: components["schemas"]["CountryEnum"]
       workplace?: components["schemas"]["WorkplaceEnum"]
       /** Employment type */
       employment?: components["schemas"]["EmploymentEnum"]
@@ -686,6 +799,7 @@ export interface components {
       readonly title: string
       readonly department: string
       readonly location: string
+      readonly country: components["schemas"]["CountryEnum"]
       readonly workplace: components["schemas"]["WorkplaceEnum"]
       /** Employment type */
       readonly employment: components["schemas"]["EmploymentEnum"]
@@ -741,6 +855,7 @@ export interface components {
       title?: string
       department?: string
       location?: string
+      country?: components["schemas"]["CountryEnum"]
       workplace?: components["schemas"]["WorkplaceEnum"]
       /** Employment type */
       employment?: components["schemas"]["EmploymentEnum"]
@@ -772,6 +887,65 @@ export interface components {
       full_name: string
       /** Format: email */
       email: string
+    }
+    PublicCompany: {
+      name: string
+      slug: string
+    }
+    PublicJob: {
+      /** Format: uuid */
+      readonly id: string
+      readonly title: string
+      readonly department: string
+      readonly location: string
+      readonly country: components["schemas"]["CountryEnum"]
+      readonly workplace: components["schemas"]["WorkplaceEnum"]
+      /** Employment type */
+      readonly employment: components["schemas"]["EmploymentEnum"]
+      readonly language: components["schemas"]["LanguageEnum"]
+      /**
+       * First published at
+       * Format: date-time
+       */
+      readonly published_at: string | null
+      readonly description: string
+      readonly salary: components["schemas"]["PublicSalary"] | null
+      readonly requirements: components["schemas"]["PublicRequirement"][]
+      /** @description schema.org/JobPosting as JSON-LD, ready to embed. */
+      readonly posting: {
+        [key: string]: unknown
+      }
+    }
+    PublicJobPage: {
+      company: components["schemas"]["PublicCompany"]
+      job: components["schemas"]["PublicJob"]
+    }
+    PublicJobSummary: {
+      /** Format: uuid */
+      readonly id: string
+      readonly title: string
+      readonly department: string
+      readonly location: string
+      readonly country: components["schemas"]["CountryEnum"]
+      readonly workplace: components["schemas"]["WorkplaceEnum"]
+      /** Employment type */
+      readonly employment: components["schemas"]["EmploymentEnum"]
+      readonly language: components["schemas"]["LanguageEnum"]
+      /**
+       * First published at
+       * Format: date-time
+       */
+      readonly published_at: string | null
+    }
+    PublicRequirement: {
+      readonly text: string
+      readonly kind: components["schemas"]["RequirementKindEnum"]
+    }
+    PublicSalary: {
+      min: number
+      max: number
+      currency: string
+      period: components["schemas"]["SalaryPeriodEnum"]
     }
     Requirement: {
       id?: number | null
@@ -1151,6 +1325,68 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Detail"]
+        }
+      }
+    }
+  }
+  careers_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        slug: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["CareersPage"]
+        }
+      }
+    }
+  }
+  careers_jobs_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        slug: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PublicJobPage"]
+        }
+      }
+    }
+  }
+  company_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["CurrentCompany"]
         }
       }
     }

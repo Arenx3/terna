@@ -6,6 +6,7 @@ import {
   CircleCheckIcon,
   CircleIcon,
   EllipsisIcon,
+  ExternalLinkIcon,
   LockIcon,
 } from "lucide-react"
 import {
@@ -37,12 +38,15 @@ import {
   publishJob,
   updateJob,
   WORKPLACES,
+  COUNTRIES,
+  type Country,
   type Employment,
   type Job,
   type JobInput,
   type Stage,
   type Workplace,
 } from "@/api/jobs"
+import { currentCompanyQuery } from "@/api/careers"
 import { membersQuery } from "@/api/team"
 import { useRole } from "@/auth/roles"
 import { useSession } from "@/auth/session"
@@ -64,7 +68,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,7 +87,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { useDocumentTitle } from "@/hooks/use-document-title"
-import { shortDate } from "@/lib/format"
+import { countryName, shortDate } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 type Language = Schemas["LanguageEnum"]
@@ -94,6 +98,7 @@ type Draft = {
   title: string
   department: string
   location: string
+  country: Country
   workplace: Workplace
   employment: Employment
   language: Language
@@ -123,6 +128,7 @@ function fromJob(job: Job): Draft {
     title: job.title,
     department: job.department ?? "",
     location: job.location ?? "",
+    country: job.country ?? "MX",
     workplace: job.workplace ?? "onsite",
     employment: job.employment ?? "full_time",
     language: job.language ?? "es",
@@ -147,6 +153,7 @@ function blankDraft(stages: Stage[], language: Language): Draft {
     title: "",
     department: "",
     location: "",
+    country: "MX",
     workplace: "onsite",
     employment: "full_time",
     language,
@@ -172,6 +179,7 @@ function toInput(draft: Draft): JobInput {
     title: draft.title.trim(),
     department: draft.department.trim(),
     location: draft.location.trim(),
+    country: draft.country,
     workplace: draft.workplace,
     employment: draft.employment,
     language: draft.language,
@@ -286,6 +294,7 @@ function JobEditor({
 
   const dirty = fingerprint(draft) !== fingerprint(baseline)
   const members = useQuery({ ...membersQuery(companyId), enabled: !readOnly })
+  const company = useQuery(currentCompanyQuery(companyId))
 
   function edit(patch: Partial<Draft>) {
     setDraft((current) => ({ ...current, ...patch }))
@@ -491,6 +500,20 @@ function JobEditor({
                   </Button>
                 </>
               )}
+              {job && status === "open" && company.data ? (
+                <a
+                  href={`/careers/${company.data.slug}/jobs/${job.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={buttonVariants({ variant: "ghost" })}
+                >
+                  <ExternalLinkIcon
+                    data-icon="inline-start"
+                    aria-hidden="true"
+                  />
+                  {t("jobs.editor.viewPosting")}
+                </a>
+              ) : null}
               {job && status !== "closed" ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger
@@ -572,7 +595,7 @@ function JobEditor({
                   maxLength={160}
                 />
                 <TextInput
-                  className="sm:col-span-3"
+                  className="sm:col-span-2"
                   label={t("jobs.editor.department")}
                   value={draft.department}
                   onChange={(department) => edit({ department })}
@@ -580,12 +603,23 @@ function JobEditor({
                   maxLength={120}
                 />
                 <TextInput
-                  className="sm:col-span-3"
+                  className="sm:col-span-2"
                   label={t("jobs.editor.location")}
                   value={draft.location}
                   onChange={(location) => edit({ location })}
                   placeholder={t("jobs.editor.locationPlaceholder")}
                   maxLength={160}
+                />
+                <SelectInput
+                  className="sm:col-span-2"
+                  label={t("jobs.editor.country")}
+                  value={draft.country}
+                  onChange={(country) => edit({ country })}
+                  choices={COUNTRIES.map((value) => ({
+                    value,
+                    label: countryName(value, i18n.language),
+                  }))}
+                  disabled={readOnly}
                 />
                 <SelectInput
                   className="sm:col-span-2"

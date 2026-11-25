@@ -2,7 +2,7 @@
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import extend_schema
-from rest_framework import exceptions, status
+from rest_framework import exceptions, serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -23,6 +23,7 @@ from accounts.serializers import (
 )
 from accounts.throttles import IPRateThrottle
 from accounts.views import session_response
+from tenancy.models import Company
 
 
 class LastAdmin(exceptions.APIException):
@@ -164,3 +165,18 @@ class AcceptInvitationView(PublicInvitationView):
             raise exceptions.ValidationError({"password": list(exc.messages)}) from exc
         # Signed in, and switched to the company they just joined.
         return session_response(user, membership)
+
+
+class CurrentCompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ("id", "name", "slug")
+        read_only_fields = fields
+
+
+class CurrentCompanyView(CompanyView):
+    """The active company's profile: its name and public careers page slug."""
+
+    @extend_schema(responses={200: CurrentCompanySerializer}, tags=["team"])
+    def get(self, request: Request) -> Response:
+        return Response(CurrentCompanySerializer(Company.objects.get()).data)

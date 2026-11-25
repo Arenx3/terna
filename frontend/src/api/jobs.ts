@@ -13,8 +13,36 @@ export type StageKind = Schemas["StageKindEnum"]
 export type Workplace = Schemas["WorkplaceEnum"]
 export type Employment = Schemas["EmploymentEnum"]
 export type JobInput = Schemas["JobRequest"]
+export type Country = Schemas["CountryEnum"]
 export type StageInput = Schemas["StageRequest"]
 
+// Same order as the API's list; names come from Intl.DisplayNames.
+export const COUNTRIES: Country[] = [
+  "MX",
+  "US",
+  "CA",
+  "GT",
+  "SV",
+  "HN",
+  "NI",
+  "CR",
+  "PA",
+  "CU",
+  "DO",
+  "PR",
+  "CO",
+  "VE",
+  "EC",
+  "PE",
+  "BO",
+  "CL",
+  "AR",
+  "UY",
+  "PY",
+  "BR",
+  "ES",
+  "PT",
+]
 export const JOB_STATUSES: JobStatus[] = ["open", "draft", "closed"]
 export const WORKPLACES: Workplace[] = ["onsite", "hybrid", "remote"]
 export const EMPLOYMENTS: Employment[] = [

@@ -55,6 +55,8 @@ class TenantManager(models.Manager):
 class Company(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(_("name"), max_length=200)
+    # The company's address on its public careers page: /careers/<slug>.
+    slug = models.SlugField(_("slug"), max_length=60, unique=True)
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
 
     # Row-level security on this table keys on the primary key, not on company_id.

@@ -3,6 +3,7 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from accounts.team_urls import public_urlpatterns as invitation_urls
+from accounts.team_views import CurrentCompanyView
 from core.views import HealthView, liveness
 from events.views import AuditLogView
 
@@ -16,6 +17,8 @@ urlpatterns = [
     path("api/auth/", include("accounts.urls")),
     path("api/team/", include("accounts.team_urls")),
     path("api/jobs/", include("jobs.urls")),
+    path("api/careers/", include("jobs.public_urls")),
+    path("api/company/", CurrentCompanyView.as_view(), name="company"),
     path("api/audit/", AuditLogView.as_view(), name="audit"),
     path("api/invitations/", include(invitation_urls)),
     path("api/schema/", no_transaction(SpectacularAPIView.as_view()), name="schema"),
