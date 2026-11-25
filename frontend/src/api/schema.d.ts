@@ -4,6 +4,27 @@
  */
 
 export interface paths {
+  "/api/audit/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    get: operations["audit_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/auth/login/": {
     parameters: {
       query?: never
@@ -237,10 +258,18 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     get: operations["jobs_list"]
     put?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     post: operations["jobs_create"]
     delete?: never
     options?: never
@@ -255,15 +284,27 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     get: operations["jobs_retrieve"]
     put?: never
     post?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     delete: operations["jobs_destroy"]
     options?: never
     head?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     patch: operations["jobs_partial_update"]
     trace?: never
   }
@@ -274,16 +315,32 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     get: operations["jobs_close_retrieve"]
     put?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     post: operations["jobs_close_create"]
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     delete: operations["jobs_close_destroy"]
     options?: never
     head?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     patch: operations["jobs_close_partial_update"]
     trace?: never
   }
@@ -294,16 +351,32 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     get: operations["jobs_publish_retrieve"]
     put?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     post: operations["jobs_publish_create"]
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     delete: operations["jobs_publish_destroy"]
     options?: never
     head?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     patch: operations["jobs_publish_partial_update"]
     trace?: never
   }
@@ -332,10 +405,18 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     get: operations["team_invitations_list"]
     put?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     post: operations["team_invitations_create"]
     delete?: never
     options?: never
@@ -353,7 +434,11 @@ export interface paths {
     get?: never
     put?: never
     post?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     delete: operations["team_invitations_destroy"]
     options?: never
     head?: never
@@ -367,7 +452,11 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     get: operations["team_members_list"]
     put?: never
     post?: never
@@ -387,11 +476,19 @@ export interface paths {
     get?: never
     put?: never
     post?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     delete: operations["team_members_destroy"]
     options?: never
     head?: never
-    /** @description Base for views over the active company's data: members only. */
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
     patch: operations["team_members_partial_update"]
     trace?: never
   }
@@ -402,6 +499,26 @@ export interface components {
     AcceptInvitationRequest: {
       full_name?: string
       password?: string
+    }
+    AuditEvent: {
+      readonly id: number
+      readonly type: components["schemas"]["EventTypeEnum"]
+      /**
+       * Actor
+       * Format: uuid
+       */
+      readonly actor_id: string | null
+      readonly actor_name: string
+      readonly entity_type: string
+      readonly entity_id: string
+      readonly entity_label: string
+      readonly payload: unknown
+      /** Format: date-time */
+      readonly occurred_at: string
+    }
+    AuditPage: {
+      results: components["schemas"]["AuditEvent"][]
+      next_before: number | null
     }
     Company: {
       /** Format: uuid */
@@ -425,6 +542,30 @@ export interface components {
      * @enum {string}
      */
     EmploymentEnum: "full_time" | "part_time" | "contract" | "internship"
+    /**
+     * @description * `job.created` - Job created
+     *     * `job.published` - Job published
+     *     * `job.reopened` - Job reopened
+     *     * `job.closed` - Job closed
+     *     * `job.deleted` - Draft job deleted
+     *     * `member.joined` - Member joined
+     *     * `member.role_changed` - Member role changed
+     *     * `member.removed` - Member removed
+     *     * `invitation.sent` - Invitation sent
+     *     * `invitation.revoked` - Invitation cancelled
+     * @enum {string}
+     */
+    EventTypeEnum:
+      | "job.created"
+      | "job.published"
+      | "job.reopened"
+      | "job.closed"
+      | "job.deleted"
+      | "member.joined"
+      | "member.role_changed"
+      | "member.removed"
+      | "invitation.sent"
+      | "invitation.revoked"
     Health: {
       status: components["schemas"]["HealthStatusEnum"]
       checks: {
@@ -744,6 +885,38 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  audit_retrieve: {
+    parameters: {
+      query?: {
+        /** @description Only what this person did (user id). */
+        actor?: string
+        /** @description Cursor from `next_before`. */
+        before?: number
+        /** @description Page size, up to 200. */
+        limit?: number
+        /** @description ISO 8601 date-time, inclusive. */
+        since?: string
+        /** @description Event type, or an area such as "job". */
+        type?: string
+        /** @description ISO 8601 date-time, exclusive. */
+        until?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["AuditPage"]
+        }
+      }
+    }
+  }
   auth_login_create: {
     parameters: {
       query?: never

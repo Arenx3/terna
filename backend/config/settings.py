@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "tenancy",
     "accounts",
     "jobs",
+    "events",
     "demo",
 ]
 
@@ -198,6 +199,7 @@ SPECTACULAR_SETTINGS = {
         "JobStatusEnum": "jobs.models.Job.Status",
         "RequirementKindEnum": "jobs.models.Requirement.Kind",
         "StageKindEnum": "jobs.models.StageKind",
+        "EventTypeEnum": "events.models.EventType",
     },
 }
 
@@ -213,7 +215,10 @@ CELERY_TASK_IGNORE_RESULT = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_BEAT_SCHEDULER = "core.beat:HeartbeatScheduler"
 CELERY_BEAT_MAX_LOOP_INTERVAL = 30
-CELERY_BEAT_SCHEDULE: dict = {}
+CELERY_BEAT_SCHEDULE: dict = {
+    # Safety net for the transactional outbox: events whose kick was lost still go out.
+    "dispatch-outbox": {"task": "events.tasks.dispatch_outbox", "schedule": 30.0},
+}
 
 # Object storage (S3 compatible). The public endpoint is the one browsers reach.
 

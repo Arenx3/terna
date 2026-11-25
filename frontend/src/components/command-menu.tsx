@@ -10,6 +10,7 @@ import {
   UsersIcon,
   ArrowLeftRightIcon,
   PlusIcon,
+  ScrollTextIcon,
   WorkflowIcon,
 } from "lucide-react"
 import type { ReactNode } from "react"
@@ -103,6 +104,14 @@ export function CommandMenu({
               >
                 <WorkflowIcon aria-hidden="true" />
                 <Label>{t("nav.pipeline")}</Label>
+              </CommandItem>
+            ) : null}
+            {isAdmin ? (
+              <CommandItem
+                onSelect={() => run(() => navigate("/settings/audit"))}
+              >
+                <ScrollTextIcon aria-hidden="true" />
+                <Label>{t("nav.audit")}</Label>
               </CommandItem>
             ) : null}
           </CommandGroup>

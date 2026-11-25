@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from accounts.models import Membership, User
 from accounts.sessions import user_memberships
+from events.outbox import acting_as
 from jobs import services
 from jobs.models import Job
 from jobs.services import RequirementItem
@@ -181,7 +182,8 @@ def seed(*, password: str) -> list[str]:
             if company_id is None:
                 company_id = create_company(demo.name).id
                 report.append(f"Created company {demo.name}.")
-            with tenant_context(company_id):
+            # The audit log shows the demo jobs as Ana's work.
+            with tenant_context(company_id), acting_as(owner):
                 company = Company.objects.get()
                 for person in demo.team:
                     _member(company, _person(person, password), person.role)

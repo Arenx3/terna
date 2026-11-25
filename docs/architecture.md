@@ -54,7 +54,7 @@ Decision record: [ADR-0001](adr/0001-multi-tenancy-with-row-level-security.md).
 
 ## Events and audit
 
-- **Transactional outbox:** domain events are written in the same transaction as the change they describe. A dispatcher then delivers them to the audit log, notifications, analytics and real-time updates. A rolled-back change emits nothing, and a committed change is never lost.
+- **Transactional outbox:** domain events are written in the same transaction as the change they describe. A dispatcher then delivers them to the audit log, notifications, analytics and real-time updates. A rolled-back change emits nothing, and a committed change is never lost. See [ADR 0002](adr/0002-transactional-outbox.md).
 - **Append-only audit log:** a database trigger rejects `UPDATE` and `DELETE` on audit rows. Recruiter overrides, stage moves, blind-mode reveals and data access are all recorded.
 
 ## Real time
@@ -119,7 +119,6 @@ Models are downloaded once into a dedicated volume. No external API is called. T
 
 ## Planned decision records
 
-- Transactional outbox for domain events
 - PostgreSQL for search instead of a dedicated search engine
 - Local, deterministic AI only
 - Separate task queues per workload

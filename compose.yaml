@@ -190,6 +190,9 @@ services:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
+      # Demo data emits events; their dispatch is queued on Redis.
+      redis:
+        condition: service_healthy
       storage:
         condition: service_healthy
 

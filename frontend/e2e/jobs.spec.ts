@@ -58,4 +58,19 @@ test("a recruiter writes a job, orders its requirements and publishes it", async
   await expect(row).toContainText("1 must-have")
   await expect(row).toContainText("1 nice-to-have")
   await expect(row).toContainText("Open")
+
+  // The workers deliver the events to the audit log a moment after the commit.
+  await page.getByRole("link", { name: "Audit log" }).click()
+  const published = page
+    .getByRole("listitem")
+    .filter({ hasText: "Ana Pérez published Platform Engineer" })
+  await expect(async () => {
+    await page.reload()
+    await expect(published).toBeVisible({ timeout: 1_000 })
+  }).toPass({ timeout: 20_000 })
+  await expect(
+    page
+      .getByRole("listitem")
+      .filter({ hasText: "Ana Pérez created the job Platform Engineer" })
+  ).toBeVisible()
 })
