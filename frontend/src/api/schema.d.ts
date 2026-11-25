@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+  "/api/applications/{id}/resume/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description A short-lived download link. The file goes from storage to the browser. */
+    get: operations["applications_resume_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/audit/": {
     parameters: {
       query?: never
@@ -229,6 +246,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/careers/{slug}/jobs/{id}/apply/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["careers_jobs_apply_retrieve"]
+    put?: never
+    post: operations["careers_jobs_apply_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/careers/{slug}/jobs/{id}/uploads/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations["careers_jobs_uploads_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/company/": {
     parameters: {
       query?: never
@@ -355,6 +404,27 @@ export interface paths {
      *     Events emitted during the request are attributed to the caller.
      */
     patch: operations["jobs_partial_update"]
+    trace?: never
+  }
+  "/api/jobs/{id}/applications/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    get: operations["jobs_applications_list"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   "/api/jobs/{id}/close/": {
@@ -549,6 +619,52 @@ export interface components {
       full_name?: string
       password?: string
     }
+    Applicant: {
+      readonly id: number
+      readonly full_name: string
+      /** Format: email */
+      readonly email: string
+      readonly phone: string
+    }
+    Application: {
+      readonly id: number
+      readonly candidate: components["schemas"]["Applicant"]
+      readonly stage: components["schemas"]["ApplicationStage"]
+      readonly resume: components["schemas"]["ResumeFile"] | null
+      readonly source: components["schemas"]["SourceEnum"]
+      /**
+       * Applied at
+       * Format: date-time
+       */
+      readonly created_at: string
+    }
+    ApplicationStage: {
+      readonly id: number
+      readonly name: string
+      readonly kind: components["schemas"]["StageKindEnum"]
+    }
+    Applied: {
+      status: string
+    }
+    ApplyForm: {
+      form_token: string
+      privacy_notice_version: string
+      max_size: number
+      content_types: string[]
+    }
+    ApplyRequest: {
+      form_token: string
+      upload: string
+      consent: boolean
+      notice_version: string
+      full_name: string
+      /** Format: email */
+      email: string
+      /** @default  */
+      phone: string
+      /** @default  */
+      website: string
+    }
     AuditEvent: {
       readonly id: number
       readonly type: components["schemas"]["EventTypeEnum"]
@@ -579,6 +695,14 @@ export interface components {
       name: string
       role: string
     }
+    /**
+     * @description * `application/pdf` - application/pdf
+     *     * `application/vnd.openxmlformats-officedocument.wordprocessingml.document` - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+     * @enum {string}
+     */
+    ContentTypeEnum:
+      | "application/pdf"
+      | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     /**
      * @description * `MX` - MX
      *     * `US` - US
@@ -664,6 +788,7 @@ export interface components {
      *     * `member.removed` - Member removed
      *     * `invitation.sent` - Invitation sent
      *     * `invitation.revoked` - Invitation cancelled
+     *     * `application.submitted` - Application submitted
      * @enum {string}
      */
     EventTypeEnum:
@@ -677,6 +802,13 @@ export interface components {
       | "member.removed"
       | "invitation.sent"
       | "invitation.revoked"
+      | "application.submitted"
+    /**
+     * @description * `pdf` - PDF
+     *     * `docx` - DOCX
+     * @enum {string}
+     */
+    FormatEnum: "pdf" | "docx"
     Health: {
       status: components["schemas"]["HealthStatusEnum"]
       checks: {
@@ -808,6 +940,7 @@ export interface components {
       readonly hiring_manager: components["schemas"]["Person"] | null
       readonly must_haves: number
       readonly nice_to_haves: number
+      readonly applicants: number
       /** Format: date-time */
       readonly created_at: string
       /** Format: date-time */
@@ -963,6 +1096,17 @@ export interface components {
       text: string
       kind: components["schemas"]["RequirementKindEnum"]
     }
+    ResumeFile: {
+      /** File name */
+      readonly filename: string
+      readonly format: components["schemas"]["FormatEnum"]
+      /** Size in bytes */
+      readonly size: number
+    }
+    ResumeLink: {
+      /** Format: uri */
+      url: string
+    }
     /**
      * @description * `admin` - Admin
      *     * `recruiter` - Recruiter
@@ -999,6 +1143,11 @@ export interface components {
       /** @default en */
       language: components["schemas"]["LanguageEnum"]
     }
+    /**
+     * @description * `careers` - Careers page
+     * @enum {string}
+     */
+    SourceEnum: "careers"
     Stage: {
       id?: number | null
       /** @default  */
@@ -1035,6 +1184,21 @@ export interface components {
     TokenRequest: {
       token: string
     }
+    UploadRequestRequest: {
+      form_token: string
+      consent: boolean
+      filename: string
+      content_type: components["schemas"]["ContentTypeEnum"]
+      size: number
+    }
+    UploadTicket: {
+      ticket: string
+      /** Format: uri */
+      url: string
+      headers: {
+        [key: string]: string
+      }
+    }
     User: {
       /** Format: uuid */
       readonly id: string
@@ -1059,6 +1223,27 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  applications_resume_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ResumeLink"]
+        }
+      }
+    }
+  }
   audit_retrieve: {
     parameters: {
       query?: {
@@ -1372,6 +1557,84 @@ export interface operations {
       }
     }
   }
+  careers_jobs_apply_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        slug: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ApplyForm"]
+        }
+      }
+    }
+  }
+  careers_jobs_apply_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        slug: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplyRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["ApplyRequest"]
+        "multipart/form-data": components["schemas"]["ApplyRequest"]
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Applied"]
+        }
+      }
+    }
+  }
+  careers_jobs_uploads_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        slug: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UploadRequestRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["UploadRequestRequest"]
+        "multipart/form-data": components["schemas"]["UploadRequestRequest"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["UploadTicket"]
+        }
+      }
+    }
+  }
   company_retrieve: {
     parameters: {
       query?: never
@@ -1576,6 +1839,27 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_applications_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Application"][]
         }
       }
     }

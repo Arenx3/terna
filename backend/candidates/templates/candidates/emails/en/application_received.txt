@@ -1,0 +1,10 @@
+{% autoescape off %}Hi {{ name }},
+
+Thanks for applying to {{ job }} at {{ company }}. We received your résumé and the team will review it.
+
+We'll write to this address when there's news about your application.
+
+Your data is used only for this position, as described in the privacy notice you accepted. You can ask to see, correct or delete it at any time.
+
+— {{ company }}, with Terna
+{% endautoescape %}

@@ -13,7 +13,8 @@ import { Link, useParams } from "react-router"
 import { publicJobQuery } from "@/api/careers"
 import { ApiError } from "@/api/errors"
 import { CareersNotice } from "@/components/careers-notice"
-import { Button } from "@/components/ui/button"
+import { ApplyForm } from "@/components/apply-form"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { moneyRange, shortDate } from "@/lib/format"
 import { useJobFacts } from "@/pages/careers-page"
@@ -114,6 +115,9 @@ export function PublicJobPage() {
               })}
             </span>
           ) : null}
+          <a href="#apply" className={buttonVariants({ size: "sm" })}>
+            {t("careers.applyNow")}
+          </a>
           <Button variant="outline" size="sm" onClick={() => void copyLink()}>
             {copied ? (
               <CheckIcon data-icon="inline-start" aria-hidden="true" />
@@ -179,6 +183,25 @@ export function PublicJobPage() {
           </section>
         ) : null}
       </div>
+
+      <section
+        id="apply"
+        aria-labelledby="apply-title"
+        className="flex scroll-mt-8 flex-col gap-5 border-t pt-10"
+      >
+        <div className="flex flex-col gap-1">
+          <h2
+            id="apply-title"
+            className="text-xl font-semibold tracking-[-0.02em]"
+          >
+            {t("careers.apply.title")}
+          </h2>
+          <p className="text-muted-foreground">
+            {t("careers.apply.description")}
+          </p>
+        </div>
+        <ApplyForm slug={slug} jobId={job.id} jobTitle={job.title} />
+      </section>
     </article>
   )
 }

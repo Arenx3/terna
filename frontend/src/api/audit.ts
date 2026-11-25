@@ -7,7 +7,12 @@ export type AuditEvent = Schemas["AuditEvent"]
 export type EventType = Schemas["EventTypeEnum"]
 
 /** Areas of activity, the coarse filter: each event type starts with one. */
-export const AUDIT_AREAS = ["job", "member", "invitation"] as const
+export const AUDIT_AREAS = [
+  "job",
+  "application",
+  "member",
+  "invitation",
+] as const
 export type AuditArea = (typeof AUDIT_AREAS)[number]
 
 export type AuditFilters = {

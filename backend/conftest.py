@@ -1,4 +1,5 @@
 import pytest
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.db import connection
 from django.utils import timezone
@@ -7,6 +8,7 @@ from rest_framework.test import APIClient
 
 from accounts.models import Membership, User
 from accounts.sessions import issue_refresh_token
+from core.storage import s3_client
 from tenancy.context import tenant_context
 from tenancy.services import create_company
 
@@ -106,3 +108,41 @@ def acme(db):
 @pytest.fixture
 def globex(db):
     return Team("Globex")
+
+
+@pytest.fixture
+def job_payload():
+    def make(**overrides) -> dict:
+        payload = {
+            "title": "Senior Backend Engineer",
+            "department": "Engineering",
+            "location": "Monterrey, NL",
+            "workplace": "hybrid",
+            "employment": "full_time",
+            "language": "es",
+            "description": "Build the services behind checkout.",
+            "requirements": [
+                {"text": "5+ years building APIs in Python", "kind": "must"},
+                {"text": "Kubernetes in production", "kind": "must"},
+                {"text": "Advanced English", "kind": "nice"},
+            ],
+        }
+        payload.update(overrides)
+        return payload
+
+    return make
+
+
+TEST_BUCKET = "terna-tests"
+
+
+@pytest.fixture
+def test_bucket(settings):
+    """A bucket of its own for tests that store files, so they never touch the demo's."""
+    settings.STORAGE_BUCKET = TEST_BUCKET
+    client = s3_client()
+    try:
+        client.head_bucket(Bucket=TEST_BUCKET)
+    except ClientError:
+        client.create_bucket(Bucket=TEST_BUCKET)
+    return TEST_BUCKET

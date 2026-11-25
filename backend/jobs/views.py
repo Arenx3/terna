@@ -40,6 +40,12 @@ class PublishBlocked(exceptions.APIException):
     default_code = "publish_needs_must_have"
 
 
+class StageInUse(exceptions.APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "Move the candidates out of a stage before removing it."
+    default_code = "stage_in_use"
+
+
 class NotDraft(exceptions.APIException):
     status_code = status.HTTP_409_CONFLICT
     default_detail = "Only drafts can be deleted. Close the job instead."
@@ -71,8 +77,17 @@ class JobsView(CompanyView):
     )
     def get(self, request: Request) -> Response:
         jobs = visible_jobs(request).annotate(
-            must_haves=Count("requirements", filter=Q(requirements__kind=Requirement.Kind.MUST)),
-            nice_to_haves=Count("requirements", filter=Q(requirements__kind=Requirement.Kind.NICE)),
+            must_haves=Count(
+                "requirements",
+                filter=Q(requirements__kind=Requirement.Kind.MUST),
+                distinct=True,
+            ),
+            nice_to_haves=Count(
+                "requirements",
+                filter=Q(requirements__kind=Requirement.Kind.NICE),
+                distinct=True,
+            ),
+            applicants=Count("applications", distinct=True),
         )
         wanted = request.query_params.get("status")
         if wanted in Job.Status.values:
@@ -121,6 +136,8 @@ class JobDetailView(CompanyView):
             raise shape_error(exc) from exc
         except services.PublishBlockedError as exc:
             raise PublishBlocked from exc
+        except services.StageInUseError as exc:
+            raise StageInUse from exc
         return Response(JobSerializer(job).data)
 
     @extend_schema(responses={204: None}, tags=["jobs"])

@@ -26,6 +26,7 @@ class Command(BaseCommand):
         self.ensure_app_role()
         call_command("migrate", interactive=False, verbosity=options["verbosity"])
         self.ensure_bucket()
+        self.ensure_cors()
         if env_bool("DEMO_DATA", True):
             call_command("seed_demo")
 
@@ -58,3 +59,22 @@ class Command(BaseCommand):
             self.stderr.write(f"Storage not ready ({error}); retry {attempt}/{STORAGE_ATTEMPTS}.")
             time.sleep(STORAGE_RETRY_SECONDS)
         raise CommandError(f"Could not reach storage to create bucket {bucket!r}.")
+
+    def ensure_cors(self) -> None:
+        """Let the app's own pages upload and download straight from storage, and no one else."""
+        origins = sorted(set(settings.STORAGE_CORS_ORIGINS))
+        s3_client().put_bucket_cors(
+            Bucket=settings.STORAGE_BUCKET,
+            CORSConfiguration={
+                "CORSRules": [
+                    {
+                        "AllowedOrigins": origins,
+                        "AllowedMethods": ["PUT", "GET"],
+                        "AllowedHeaders": ["*"],
+                        "ExposeHeaders": ["ETag"],
+                        "MaxAgeSeconds": 3600,
+                    }
+                ]
+            },
+        )
+        self.stdout.write(f"Storage accepts browser uploads from {', '.join(origins)}.")

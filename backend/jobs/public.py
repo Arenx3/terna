@@ -170,6 +170,7 @@ class PublicView(APIView):
     permission_classes = (AllowAny,)
     throttle_classes = (IPRateThrottle,)
     throttle_scope = "careers"
+    cacheable = True
 
     def company(self, slug: str) -> dict:
         found = company_by_slug(slug)
@@ -180,9 +181,11 @@ class PublicView(APIView):
 
     def finalize_response(self, request, response, *args, **kwargs):
         response = super().finalize_response(request, response, *args, **kwargs)
-        if response.status_code == 200:
+        if response.status_code == 200 and self.cacheable:
             # Shared caches may keep a page a minute; a closed job disappears within that.
             response["Cache-Control"] = "public, max-age=60"
+        else:
+            response["Cache-Control"] = "no-store"
         return response
 
 

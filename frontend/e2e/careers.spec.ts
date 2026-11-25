@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Page } from "@playwright/test"
 
 import { newAdmin } from "./helpers.ts"
-import { uniqueEmail } from "./mailpit.ts"
+import { uniqueEmail, waitForEmail } from "./mailpit.ts"
 
 async function expectNoAccessibilityViolations(page: Page) {
   const results = await new AxeBuilder({ page })
@@ -87,4 +87,75 @@ test("anyone can read a company's open jobs, and nothing else", async ({
     visitor.getByRole("heading", { name: "This page doesn't exist" })
   ).toBeVisible()
   await visitorContext.close()
+})
+
+const RESUME_PDF = Buffer.from(
+  [
+    "%PDF-1.4",
+    "1 0 obj << /Type /Catalog >> endobj",
+    "trailer << /Root 1 0 R >>",
+    "%%EOF",
+  ].join(String.fromCharCode(10))
+)
+
+test("a candidate applies with a résumé and the team sees them", async ({
+  page,
+  browser,
+}) => {
+  await newAdmin(page, uniqueEmail("apply"), "Apply E2E", "Ana Pérez")
+  const jobId = await createJob(page, "Payroll Analyst", true)
+  await page.goto("/jobs")
+  const careersPath = new URL(
+    (await page
+      .getByRole("link", { name: "Careers page" })
+      .getAttribute("href")) ?? "",
+    "http://x"
+  ).pathname
+
+  const visitorContext = await browser.newContext({ locale: "en-US" })
+  const visitor = await visitorContext.newPage()
+  await visitor.goto(`${careersPath}/jobs/${jobId}`)
+  await visitor.getByRole("link", { name: "Apply", exact: true }).click()
+  // The form gets its token as it appears: time the visit from there.
+  await expect(visitor.getByLabel("Full name")).toBeVisible()
+  const opened = Date.now()
+
+  const candidate = uniqueEmail("candidate")
+  await visitor.getByLabel("Full name").fill("Lucía Torres")
+  await visitor.getByLabel("Email").fill(candidate)
+  await visitor.locator('input[type="file"]').setInputFiles({
+    name: "cv-lucia.pdf",
+    mimeType: "application/pdf",
+    buffer: RESUME_PDF,
+  })
+  await expect(visitor.getByText("cv-lucia.pdf")).toBeVisible()
+
+  // Consent comes first: without it, nothing is sent.
+  await visitor.getByRole("button", { name: "Send application" }).click()
+  await expect(
+    visitor.getByText("Accept the privacy notice to apply.")
+  ).toBeVisible()
+  await visitor
+    .getByRole("checkbox", { name: /I've read and accept the privacy notice/ })
+    .check()
+
+  // A person takes a few seconds to fill a form; the API refuses instant ones.
+  await visitor.waitForTimeout(Math.max(0, 3_500 - (Date.now() - opened)))
+  await visitor.getByRole("button", { name: "Send application" }).click()
+  await expect(
+    visitor.getByRole("heading", { name: "Done, Lucía!" })
+  ).toBeVisible({ timeout: 20_000 })
+  await expectNoAccessibilityViolations(visitor)
+  await visitorContext.close()
+
+  const email = await waitForEmail(candidate, /We received your application/)
+  expect(email.text).toContain("Payroll Analyst")
+
+  await page.goto(`/jobs/${jobId}/candidates`)
+  const row = page.getByRole("listitem").filter({ hasText: "Lucía Torres" })
+  await expect(row).toContainText(candidate)
+  await expect(row).toContainText("Applied")
+  await expect(
+    row.getByRole("button", { name: "Download Lucía Torres's résumé" })
+  ).toBeVisible()
 })

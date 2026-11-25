@@ -10,11 +10,13 @@ import { CareersPage } from "@/pages/careers-page"
 import { CheckEmailPage } from "@/pages/check-email-page"
 import { ForgotPasswordPage } from "@/pages/forgot-password-page"
 import { HomePage } from "@/pages/home-page"
+import { JobCandidatesPage } from "@/pages/job-candidates-page"
 import { JobEditorPage } from "@/pages/job-editor-page"
 import { JobsPage } from "@/pages/jobs-page"
 import { LoginPage } from "@/pages/login-page"
 import { NotFoundPage } from "@/pages/not-found-page"
 import { PipelinePage } from "@/pages/pipeline-page"
+import { PrivacyNoticePage } from "@/pages/privacy-notice-page"
 import { PublicJobPage } from "@/pages/public-job-page"
 import { ResetPasswordPage } from "@/pages/reset-password-page"
 import { SignupPage } from "@/pages/signup-page"
@@ -32,6 +34,7 @@ export const router = createBrowserRouter([
           { path: "jobs", element: <JobsPage /> },
           { path: "jobs/new", element: <JobEditorPage /> },
           { path: "jobs/:jobId", element: <JobEditorPage /> },
+          { path: "jobs/:jobId/candidates", element: <JobCandidatesPage /> },
           { path: "team", element: <TeamPage /> },
           { path: "settings/pipeline", element: <PipelinePage /> },
           { path: "settings/audit", element: <AuditPage /> },
@@ -46,6 +49,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <CareersPage /> },
       { path: "jobs/:jobId", element: <PublicJobPage /> },
+      { path: "privacy", element: <PrivacyNoticePage /> },
     ],
   },
   {

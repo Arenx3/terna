@@ -4,6 +4,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from accounts.team_urls import public_urlpatterns as invitation_urls
 from accounts.team_views import CurrentCompanyView
+from candidates.views import JobApplicationsView, ResumeLinkView
 from core.views import HealthView, liveness
 from events.views import AuditLogView
 
@@ -18,6 +19,13 @@ urlpatterns = [
     path("api/team/", include("accounts.team_urls")),
     path("api/jobs/", include("jobs.urls")),
     path("api/careers/", include("jobs.public_urls")),
+    path("api/careers/", include("candidates.public_urls")),
+    path(
+        "api/jobs/<uuid:pk>/applications/",
+        JobApplicationsView.as_view(),
+        name="job-applications",
+    ),
+    path("api/applications/<int:pk>/resume/", ResumeLinkView.as_view(), name="resume-link"),
     path("api/company/", CurrentCompanyView.as_view(), name="company"),
     path("api/audit/", AuditLogView.as_view(), name="audit"),
     path("api/invitations/", include(invitation_urls)),

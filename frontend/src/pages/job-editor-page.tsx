@@ -52,6 +52,7 @@ import { useRole } from "@/auth/roles"
 import { useSession } from "@/auth/session"
 import { ChoiceSelect } from "@/components/choice-select"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
+import { JobTabs } from "@/components/jobs/job-tabs"
 import {
   RequirementsEditor,
   type DraftRequirement,
@@ -547,6 +548,8 @@ function JobEditor({
             </div>
           )}
         </div>
+
+        {job ? <JobTabs jobId={job.id} /> : null}
 
         {readOnly ? (
           <p className="flex items-center gap-2 rounded-lg border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
