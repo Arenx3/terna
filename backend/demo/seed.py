@@ -5,14 +5,22 @@ looks things up by their natural keys and only adds what is missing, so it can
 run on every start without duplicating anything or undoing a visitor's edits.
 """
 
+import uuid
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
 from accounts.models import Membership, User
 from accounts.sessions import user_memberships
-from events.outbox import acting_as
+from candidates.models import Application, Candidate, ConsentRecord, Resume
+from candidates.services import PRIVACY_NOTICE_VERSION
+from core.storage import s3_client
+from demo.resumes import resume_pdf
+from events.models import EventType
+from events.outbox import acting_as, emit
 from jobs import services
 from jobs.models import Job
 from jobs.services import RequirementItem
@@ -188,8 +196,11 @@ def seed(*, password: str) -> list[str]:
                 for person in demo.team:
                     _member(company, _person(person, password), person.role)
                 created = [job.title for job in demo.jobs if _job(job, owner)]
+                applied = sum(_applicants(title, people) for title, people in APPLICANTS.items())
             if created:
                 report.append(f"{demo.name}: created jobs {', '.join(created)}.")
+            if applied:
+                report.append(f"{demo.name}: added {applied} demo applications.")
     return report or ["Demo data already in place."]
 
 
@@ -237,3 +248,129 @@ def _job(demo: DemoJob, created_by: User) -> bool:
     if demo.status == Job.Status.CLOSED:
         services.close(job)
     return True
+
+
+@dataclass(frozen=True)
+class DemoApplicant:
+    full_name: str
+    email: str
+    resume: tuple[str, ...]
+
+
+# Fictional people with fictional résumés, under example.com.
+APPLICANTS: dict[str, tuple[DemoApplicant, ...]] = {
+    "Senior Backend Engineer": (
+        DemoApplicant(
+            "Mateo Rivera",
+            "mateo.rivera@example.com",
+            (
+                "Mateo Rivera - Backend Engineer",
+                "Monterrey, NL - mateo.rivera@example.com",
+                "Experience",
+                "2019-2025  Senior Engineer, Logistica Norte: led the move of 40 services",
+                "           to Python 3.12 and FastAPI; on-call for the payments platform.",
+                "2016-2019  Developer, Grupo Andino: Django APIs for 2M customers.",
+                "Skills: Python, Kubernetes (EKS, 3 years in production), PostgreSQL tuning,",
+                "        Kafka, Terraform. English: advanced (C1).",
+            ),
+        ),
+        DemoApplicant(
+            "Valentina Cruz",
+            "valentina.cruz@example.com",
+            (
+                "Valentina Cruz - Software Engineer",
+                "Guadalajara, Jal. - valentina.cruz@example.com",
+                "Experience",
+                "2021-2025  Backend Engineer, Fintech Pacifico: Go and Python services,",
+                "           ran the k8s clusters behind checkout at 3,000 orders a minute.",
+                "2019-2021  Data Engineer, Retail Occidente: PostgreSQL migrations, Airflow.",
+                "Speaker at PyCon US 2025. Mentor at a local bootcamp.",
+            ),
+        ),
+        DemoApplicant(
+            "Camila Ortega",
+            "camila.ortega@example.com",
+            (
+                "Camila Ortega - Full-stack Developer",
+                "Ciudad de Mexico - camila.ortega@example.com",
+                "Experience",
+                "2022-2025  Full-stack Developer, Agencia Digital: React and Node.js.",
+                "2020-2022  Junior Developer: WordPress sites and PHP.",
+                "Skills: JavaScript, TypeScript, MySQL. English: intermediate.",
+            ),
+        ),
+        DemoApplicant(
+            "Andrés Molina",
+            "andres.molina@example.com",
+            (
+                "Andres Molina - Platform Engineer",
+                "Queretaro, Qro. - andres.molina@example.com",
+                "Experience",
+                "2018-2025  Platform Engineer, Manufactura Bajio: Kubernetes, Helm, ArgoCD.",
+                "           Python tooling for deployments; query tuning on PostgreSQL 15.",
+                "Certified Kubernetes Administrator (CKA). English: advanced.",
+            ),
+        ),
+    ),
+    "Diseñadora o diseñador de producto": (
+        DemoApplicant(
+            "Sofía Herrera",
+            "sofia.herrera@example.com",
+            (
+                "Sofia Herrera - Disenadora de producto",
+                "Ciudad de Mexico - sofia.herrera@example.com",
+                "Experiencia",
+                "2020-2025  Product Designer, SaaS de nomina: investigacion con usuarios,",
+                "           sistema de diseno en Figma usado por 6 equipos.",
+                "Portafolio: sofiaherrera.example.com",
+            ),
+        ),
+    ),
+}
+
+
+def _applicants(job_title: str, people: tuple[DemoApplicant, ...]) -> int:
+    """Demo applications, as if sent from the careers page. Only adds what is missing."""
+    job = Job.objects.filter(title=job_title).first()
+    if job is None:
+        return 0
+    added = 0
+    first_stage = job.stages.order_by("position").first()
+    for person in people:
+        if Application.objects.filter(job=job, candidate__email=person.email).exists():
+            continue
+        candidate, _ = Candidate.objects.get_or_create(
+            email=person.email, defaults={"full_name": person.full_name, "language": "es"}
+        )
+        content = resume_pdf(list(person.resume))
+        key = f"resumes/{job.company_id}/{uuid.uuid4()}.pdf"
+        s3_client().put_object(
+            Bucket=settings.STORAGE_BUCKET, Key=key, Body=content, ContentType="application/pdf"
+        )
+        resume = Resume.objects.create(
+            candidate=candidate,
+            storage_key=key,
+            filename=f"CV {person.full_name}.pdf",
+            format=Resume.Format.PDF,
+            size=len(content),
+        )
+        application = Application.objects.create(
+            job=job, candidate=candidate, stage=first_stage, resume=resume
+        )
+        ConsentRecord.objects.create(
+            candidate=candidate,
+            application=application,
+            notice_version=PRIVACY_NOTICE_VERSION,
+            purpose=ConsentRecord.Purpose.RECRUITMENT,
+            user_agent="Terna demo seed",
+        )
+        emit(
+            EventType.APPLICATION_SUBMITTED,
+            entity_type="application",
+            entity_id=application.id,
+            label=job.title,
+            payload={"job_id": str(job.id)},
+            actor=SimpleNamespace(id=None, full_name=candidate.full_name),
+        )
+        added += 1
+    return added

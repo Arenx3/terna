@@ -47,3 +47,72 @@ export const currentCompanyQuery = (companyId: string) =>
     queryFn: () => unwrap(api.GET("/api/company/")),
     staleTime: 5 * 60_000,
   })
+
+export type ApplyForm = Schemas["ApplyForm"]
+export type ApplyInput = Schemas["ApplyRequest"]
+
+/** A fresh form token each visit: it times how long the form was open. */
+export const applyFormQuery = (slug: string, id: string) =>
+  queryOptions({
+    queryKey: ["careers", slug, "job", id, "apply-form"],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/careers/{slug}/jobs/{id}/apply/", {
+          params: { path: { slug, id } },
+        })
+      ),
+    staleTime: Infinity,
+    gcTime: 0,
+    retry,
+  })
+
+export function requestUpload(
+  slug: string,
+  id: string,
+  body: Schemas["UploadRequestRequest"]
+) {
+  return unwrap(
+    api.POST("/api/careers/{slug}/jobs/{id}/uploads/", {
+      params: { path: { slug, id } },
+      body,
+    })
+  )
+}
+
+export class UploadFailedError extends Error {}
+
+/** PUTs the file straight to storage, reporting progress from 0 to 100. */
+export function uploadFile(
+  url: string,
+  headers: Record<string, string>,
+  file: File,
+  onProgress: (percent: number) => void
+) {
+  return new Promise<void>((resolve, reject) => {
+    const request = new XMLHttpRequest()
+    request.open("PUT", url)
+    for (const [name, value] of Object.entries(headers)) {
+      request.setRequestHeader(name, value)
+    }
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress(Math.round((event.loaded / event.total) * 100))
+      }
+    }
+    request.onload = () =>
+      request.status >= 200 && request.status < 300
+        ? resolve()
+        : reject(new UploadFailedError(`HTTP ${request.status}`))
+    request.onerror = () => reject(new UploadFailedError("network"))
+    request.send(file)
+  })
+}
+
+export function submitApplication(slug: string, id: string, body: ApplyInput) {
+  return unwrap(
+    api.POST("/api/careers/{slug}/jobs/{id}/apply/", {
+      params: { path: { slug, id } },
+      body,
+    })
+  )
+}

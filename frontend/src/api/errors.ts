@@ -46,6 +46,14 @@ const KNOWN_CODES = [
   "role_forbidden",
   "publish_needs_must_have",
   "job_not_draft",
+  "form_expired",
+  "too_fast",
+  "upload_expired",
+  "resume_missing",
+  "resume_empty",
+  "resume_too_large",
+  "resume_wrong_type",
+  "stage_in_use",
 ] as const
 
 type KnownCode = (typeof KNOWN_CODES)[number]

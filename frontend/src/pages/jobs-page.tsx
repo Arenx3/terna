@@ -211,8 +211,13 @@ function JobRow({ job }: { job: JobSummary }) {
   return (
     <li>
       <Link
-        to={`/jobs/${job.id}`}
-        className="group grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-2 px-5 py-4 transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset md:grid-cols-[minmax(0,1fr)_11rem_9rem_6rem]"
+        // Drafts have no one yet; published jobs open on who applied.
+        to={
+          job.status === "draft"
+            ? `/jobs/${job.id}`
+            : `/jobs/${job.id}/candidates`
+        }
+        className="group grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-2 px-5 py-4 transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset md:grid-cols-[minmax(0,1fr)_7rem_11rem_9rem_6rem]"
       >
         <div className="flex min-w-0 flex-col gap-1">
           <span className="line-clamp-2 text-[15px] font-medium break-words">
@@ -226,6 +231,9 @@ function JobRow({ job }: { job: JobSummary }) {
           status={job.status}
           className="justify-self-end md:order-last"
         />
+        <span className="hidden text-[13px] font-medium tabular-nums md:block">
+          {t("candidates.count", { count: job.applicants })}
+        </span>
         <span className="col-span-2 text-[13px] text-muted-foreground tabular-nums md:col-span-1">
           {t("jobs.mustCount", { count: job.must_haves })}
           <span className="text-faint-foreground">

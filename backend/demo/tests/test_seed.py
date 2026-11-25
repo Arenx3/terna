@@ -2,11 +2,12 @@ import pytest
 
 from accounts.models import User
 from accounts.sessions import user_memberships
-from demo.seed import COMPANIES, OWNER_EMAIL, seed
+from candidates.models import Application, ConsentRecord
+from demo.seed import APPLICANTS, COMPANIES, OWNER_EMAIL, seed
 from jobs.models import Job
 from tenancy.context import tenant_context
 
-pytestmark = pytest.mark.django_db
+pytestmark = [pytest.mark.django_db, pytest.mark.usefixtures("test_bucket")]
 
 
 def test_seed_creates_the_demo_and_can_run_again():
@@ -27,6 +28,10 @@ def test_seed_creates_the_demo_and_can_run_again():
             assert titles == sorted(job.title for job in demo.jobs)
             statuses = dict(Job.objects.values_list("title", "status"))
             assert all(statuses[job.title] == job.status for job in demo.jobs)
+            # Fictional applicants, each with a stored résumé and a consent record.
+            expected = sum(len(APPLICANTS.get(job.title, ())) for job in demo.jobs)
+            assert Application.objects.count() == expected
+            assert ConsentRecord.objects.count() == expected
 
 
 def test_seed_keeps_what_visitors_changed():

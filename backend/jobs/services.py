@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from django.db import transaction
+from django.db.models import ProtectedError
 from django.utils import timezone
 
 from events.models import EventType
@@ -29,6 +30,10 @@ class UnknownItemError(ValueError):
 
 class PublishBlockedError(Exception):
     """A job can't be published without at least one must-have requirement."""
+
+
+class StageInUseError(Exception):
+    """A stage can't be removed while applications sit in it."""
 
 
 class NotDraftError(Exception):
@@ -165,4 +170,7 @@ def _sync(queryset, items: Sequence, build, attrs: tuple[str, ...], field: str) 
         row.save()
     for row_id, row in existing.items():
         if row_id not in kept:
-            row.delete()
+            try:
+                row.delete()
+            except ProtectedError as exc:
+                raise StageInUseError from exc

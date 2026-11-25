@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "accounts",
     "jobs",
     "events",
+    "candidates",
     "demo",
 ]
 
@@ -142,6 +143,8 @@ REST_FRAMEWORK = {
         "invitation": "60/hour",
         # Public careers pages, per visitor IP.
         "careers": "120/min",
+        # Résumé uploads and applications, per visitor IP. Overridable for end-to-end runs.
+        "apply": env("APPLY_RATE", "20/hour"),
     },
 }
 
@@ -221,6 +224,11 @@ CELERY_BEAT_MAX_LOOP_INTERVAL = 30
 CELERY_BEAT_SCHEDULE: dict = {
     # Safety net for the transactional outbox: events whose kick was lost still go out.
     "dispatch-outbox": {"task": "events.tasks.dispatch_outbox", "schedule": 30.0},
+    # Résumés uploaded for applications that were never sent.
+    "purge-incoming-uploads": {
+        "task": "candidates.tasks.purge_incoming_uploads",
+        "schedule": 3600.0,
+    },
 }
 
 # Object storage (S3 compatible). The public endpoint is the one browsers reach.
@@ -231,6 +239,11 @@ STORAGE_BUCKET = env("STORAGE_BUCKET", "terna")
 STORAGE_REGION = env("STORAGE_REGION", "us-east-1")
 STORAGE_ACCESS_KEY = env("STORAGE_ACCESS_KEY")
 STORAGE_SECRET_KEY = env("STORAGE_SECRET_KEY")
+# Browsers upload résumés straight to storage from these origins (bucket CORS).
+STORAGE_CORS_ORIGINS = [
+    *env_list("STORAGE_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"),
+    PUBLIC_APP_URL.rstrip("/"),
+]
 
 # Email: Mailpit catches everything locally; point these at a real provider to send for real.
 

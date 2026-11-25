@@ -218,6 +218,15 @@ export const es: Resources = {
     },
   },
   errors: {
+    form_expired:
+      "Este formulario venció. Recarga la página e intenta de nuevo.",
+    too_fast: "Fue muy rápido. Revisa tus datos y envía de nuevo.",
+    upload_expired: "La subida venció. Adjunta tu CV de nuevo.",
+    resume_missing: "No recibimos tu CV. Adjúntalo de nuevo.",
+    resume_empty: "El archivo del CV está vacío.",
+    resume_too_large: "El CV pesa más de 10 MB.",
+    resume_wrong_type: "El CV debe ser un PDF o un archivo de Word (.docx).",
+    stage_in_use: "Mueve a los candidatos fuera de la etapa antes de quitarla.",
     invalid_credentials: "El correo o la contraseña no son correctos.",
     email_not_verified:
       "Confirma tu correo antes de iniciar sesión. El enlace está en tu bandeja.",
@@ -443,6 +452,7 @@ export const es: Resources = {
       job: "Vacantes",
       member: "Equipo",
       invitation: "Invitaciones",
+      application: "Postulaciones",
     },
     person: "Persona",
     everyone: "Todas las personas",
@@ -475,9 +485,65 @@ export const es: Resources = {
         sent: "{actor} invitó a {subject} como {{role}}",
         revoked: "{actor} canceló la invitación de {subject}",
       },
+      application: {
+        submitted: "{actor} se postuló a {subject}",
+      },
     },
   },
   careers: {
+    applyNow: "Postularme",
+    apply: {
+      honeypot: "Deja este campo vacío",
+      title: "Postúlate a esta vacante",
+      description: "Toma un minuto. No necesitas cuenta.",
+      fullName: "Nombre completo",
+      email: "Correo",
+      phone: "Teléfono",
+      optional: "(opcional)",
+      resume: "CV",
+      drop: "Arrastra tu CV aquí o {choose}",
+      choose: "elige un archivo",
+      formats: "PDF o Word (.docx), hasta 10 MB.",
+      remove: "Quitar {{name}}",
+      consent: "Leí y acepto el {notice}.",
+      notice: "aviso de privacidad",
+      submit: "Enviar postulación",
+      uploading: "Subiendo CV… {{percent}}%",
+      sending: "Enviando…",
+      tooLarge: "El archivo pesa más de 10 MB.",
+      wrongType: "Adjunta un PDF o un archivo de Word (.docx).",
+      required: "Completa este campo.",
+      resumeRequired: "Adjunta tu CV.",
+      consentRequired: "Acepta el aviso de privacidad para postularte.",
+      uploadFailed:
+        "No pudimos subir tu CV. Revisa tu conexión e intenta de nuevo.",
+      doneTitle: "¡Listo, {{name}}!",
+      doneBody:
+        "Recibimos tu postulación a {{job}}. Te enviamos una confirmación a {{email}}.",
+    },
+    privacy: {
+      title: "Aviso de privacidad para candidatos",
+      version: "Versión {{version}}",
+      back: "Volver a la vacante",
+      who: "Quién es responsable",
+      whoBody:
+        "{{company}} es responsable de los datos personales que compartes al postularte. Terna los procesa por cuenta de {{company}}.",
+      what: "Qué datos",
+      whatBody:
+        "Tu nombre, correo, teléfono (opcional) y tu CV, con lo que contenga.",
+      why: "Para qué",
+      whyBody:
+        "Para evaluar tu candidatura a la vacante a la que te postulas y contactarte sobre el proceso. No se usan para nada más, no se venden ni se comparten con nadie ajeno al proceso.",
+      ai: "Ayuda automática, decisiones humanas",
+      aiBody:
+        "Terna puede comparar tu CV con los requisitos de la vacante. Cada sugerencia muestra la evidencia en la que se basa, y una persona toma cada decisión.",
+      keep: "Por cuánto tiempo",
+      keepBody:
+        "Mientras dure el proceso de selección y el tiempo que exija la ley. Después se eliminan.",
+      rights: "Tus derechos",
+      rightsBody:
+        "Puedes acceder a tus datos, corregirlos o borrarlos, oponerte a su uso y retirar tu consentimiento cuando quieras, contactando a {{company}}.",
+    },
     workAt: "Trabaja en {company}",
     openCount_one: "{{count}} vacante abierta",
     openCount_other: "{{count}} vacantes abiertas",
@@ -499,6 +565,20 @@ export const es: Resources = {
       description:
         "La página de empleos o la vacante pudo haberse movido o cerrado.",
     },
+  },
+  candidates: {
+    tab: "Candidatos",
+    settingsTab: "Configuración",
+    tabsLabel: "Secciones de la vacante",
+    count_one: "{{count}} candidato",
+    count_other: "{{count}} candidatos",
+    empty:
+      "Aún no hay candidatos. Comparte la publicación para empezar a recibir postulaciones.",
+    sharePosting: "Abrir la publicación",
+    resume: "CV",
+    downloadResume: "Descargar el CV de {{name}}",
+    applied: "Se postuló {{time}}",
+    loadError: "No pudimos cargar los candidatos.",
   },
   notFound: {
     title: "No encontramos esta página",

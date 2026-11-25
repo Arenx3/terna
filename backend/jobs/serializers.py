@@ -40,6 +40,7 @@ class JobSummarySerializer(serializers.ModelSerializer):
     hiring_manager = PersonSerializer(read_only=True, allow_null=True)
     must_haves = serializers.IntegerField(read_only=True)
     nice_to_haves = serializers.IntegerField(read_only=True)
+    applicants = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Job
@@ -56,6 +57,7 @@ class JobSummarySerializer(serializers.ModelSerializer):
             "hiring_manager",
             "must_haves",
             "nice_to_haves",
+            "applicants",
             "created_at",
             "updated_at",
             "published_at",

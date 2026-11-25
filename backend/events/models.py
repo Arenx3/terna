@@ -20,6 +20,7 @@ class EventType(models.TextChoices):
     MEMBER_REMOVED = "member.removed", _("Member removed")
     INVITATION_SENT = "invitation.sent", _("Invitation sent")
     INVITATION_REVOKED = "invitation.revoked", _("Invitation cancelled")
+    APPLICATION_SUBMITTED = "application.submitted", _("Application submitted")
 
 
 class EventFields(models.Model):

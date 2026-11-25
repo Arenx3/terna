@@ -1,0 +1,10 @@
+{% autoescape off %}Hola, {{ name }}:
+
+Gracias por postularte a {{ job }} en {{ company }}. Recibimos tu CV y el equipo lo revisará.
+
+Te escribiremos a este correo cuando haya novedades sobre tu proceso.
+
+Tus datos se usan solo para esta vacante, como dice el aviso de privacidad que aceptaste. Puedes pedir verlos, corregirlos o borrarlos cuando quieras.
+
+— {{ company }}, con Terna
+{% endautoescape %}
