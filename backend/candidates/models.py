@@ -69,6 +69,14 @@ class Application(TenantModel):
     class Source(models.TextChoices):
         CAREERS = "careers", _("Careers page")
 
+    class RejectionReason(models.TextChoices):
+        REQUIREMENTS = "requirements", _("Doesn't meet the requirements")
+        OTHER_CANDIDATE = "other_candidate", _("Another candidate was chosen")
+        WITHDREW = "withdrew", _("Withdrew")
+        NO_RESPONSE = "no_response", _("Stopped responding")
+        COMPENSATION = "compensation", _("Compensation expectations")
+        OTHER = "other", _("Other")
+
     job = models.ForeignKey(
         Job, on_delete=models.PROTECT, related_name="applications", verbose_name=_("job")
     )
@@ -95,6 +103,12 @@ class Application(TenantModel):
     source = models.CharField(
         _("source"), max_length=20, choices=Source.choices, default=Source.CAREERS
     )
+    stage_entered_at = models.DateTimeField(_("in this stage since"), default=timezone.now)
+    # Why someone was rejected; empty in every other stage.
+    rejection_reason = models.CharField(
+        _("rejection reason"), max_length=20, choices=RejectionReason.choices, blank=True
+    )
+    rejection_note = models.TextField(_("rejection note"), blank=True, max_length=1000)
     created_at = models.DateTimeField(_("applied at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 

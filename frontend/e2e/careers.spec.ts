@@ -1,29 +1,12 @@
-import AxeBuilder from "@axe-core/playwright"
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test } from "@playwright/test"
 
-import { newAdmin } from "./helpers.ts"
+import {
+  createJob,
+  expectNoAccessibilityViolations,
+  newAdmin,
+  RESUME_PDF,
+} from "./helpers.ts"
 import { uniqueEmail, waitForEmail } from "./mailpit.ts"
-
-async function expectNoAccessibilityViolations(page: Page) {
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .analyze()
-  expect(results.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
-}
-
-async function createJob(page: Page, title: string, publish: boolean) {
-  await page.goto("/jobs/new")
-  await page.getByLabel("Job title").fill(title)
-  await page.getByLabel("Location").fill("Querétaro, Qro.")
-  const requirement = page.getByRole("textbox", { name: "New requirement" })
-  await requirement.fill("Contract law")
-  await requirement.press("Enter")
-  await page
-    .getByRole("button", { name: publish ? "Publish" : "Save draft" })
-    .click()
-  await expect(page).toHaveURL(/\/jobs\/[0-9a-f-]{36}$/)
-  return page.url().split("/").at(-1) ?? ""
-}
 
 test("anyone can read a company's open jobs, and nothing else", async ({
   page,
@@ -89,15 +72,6 @@ test("anyone can read a company's open jobs, and nothing else", async ({
   await visitorContext.close()
 })
 
-const RESUME_PDF = Buffer.from(
-  [
-    "%PDF-1.4",
-    "1 0 obj << /Type /Catalog >> endobj",
-    "trailer << /Root 1 0 R >>",
-    "%%EOF",
-  ].join(String.fromCharCode(10))
-)
-
 test("a candidate applies with a résumé and the team sees them", async ({
   page,
   browser,
@@ -151,11 +125,13 @@ test("a candidate applies with a résumé and the team sees them", async ({
   const email = await waitForEmail(candidate, /We received your application/)
   expect(email.text).toContain("Payroll Analyst")
 
+  // On the job's board, in the first stage, with the résumé one menu away.
   await page.goto(`/jobs/${jobId}/candidates`)
-  const row = page.getByRole("listitem").filter({ hasText: "Lucía Torres" })
-  await expect(row).toContainText(candidate)
-  await expect(row).toContainText("Applied")
+  const applied = page.getByRole("region", { name: /^Applied/ })
+  await expect(applied).toContainText("Lucía Torres")
+  await expect(applied).toContainText(candidate)
+  await page.getByRole("button", { name: "Actions for Lucía Torres" }).click()
   await expect(
-    row.getByRole("button", { name: "Download Lucía Torres's résumé" })
+    page.getByRole("menuitem", { name: "Download Lucía Torres's résumé" })
   ).toBeVisible()
 })

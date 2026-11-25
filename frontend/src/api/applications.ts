@@ -27,3 +27,24 @@ export async function resumeLink(applicationId: number) {
   if (!response.ok || !data) throw new ApiError(response.status, error)
   return data.url
 }
+
+export type MoveInput = Schemas["MoveRequest"]
+export type RejectionReason = Schemas["RejectionReasonEnum"]
+
+export const REJECTION_REASONS: RejectionReason[] = [
+  "requirements",
+  "other_candidate",
+  "withdrew",
+  "no_response",
+  "compensation",
+  "other",
+]
+
+export async function moveApplication(applicationId: number, body: MoveInput) {
+  const { data, error, response } = await api.POST(
+    "/api/applications/{id}/move/",
+    { params: { path: { id: applicationId } }, body }
+  )
+  if (!response.ok || !data) throw new ApiError(response.status, error)
+  return data
+}

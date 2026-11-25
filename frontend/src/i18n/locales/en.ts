@@ -213,6 +213,8 @@ export const en = {
     },
   },
   errors: {
+    stage_changed:
+      "Someone else moved this candidate. The board is up to date now.",
     form_expired: "This form expired. Reload the page and try again.",
     too_fast: "That was quick. Check your details and send the form again.",
     upload_expired: "The upload expired. Attach your résumé again.",
@@ -472,6 +474,7 @@ export const en = {
       },
       application: {
         submitted: "{actor} applied to {subject}",
+        stage_changed: "{actor} moved {subject} to {{stage}}",
       },
     },
   },
@@ -563,6 +566,42 @@ export const en = {
     downloadResume: "Download {{name}}'s résumé",
     applied: "Applied {{time}}",
     loadError: "Couldn't load the candidates.",
+  },
+  board: {
+    label: "Pipeline board",
+    instructions:
+      "Drag a card to another stage, or open its menu to move it with the keyboard.",
+    live: "Live",
+    connecting: "Connecting…",
+    offline: "Reconnecting…",
+    alsoHere: "Also on this board",
+    more: "+{{count}}",
+    emptyColumn: "No one here",
+    actionsFor: "Actions for {{name}}",
+    moveTo: "Move to",
+    inStage: "In this stage {{time}}",
+    moved: "{{name}} moved to {{stage}}.",
+    movedBy: "{{by}} moved {{name}} to {{stage}}.",
+    added: "{{name}} applied.",
+    moveFailed: "Couldn't move {{name}}. They're back where they were.",
+    reject: {
+      title: "Reject {{name}}?",
+      description:
+        "Choose why. It's recorded with the decision; the candidate doesn't see it.",
+      reason: "Reason",
+      note: "Note",
+      optional: "(optional)",
+      confirm: "Reject",
+      cancel: "Cancel",
+    },
+    reasons: {
+      requirements: "Doesn't meet the requirements",
+      other_candidate: "Another candidate was chosen",
+      withdrew: "Withdrew",
+      no_response: "Stopped responding",
+      compensation: "Compensation expectations",
+      other: "Other",
+    },
   },
   notFound: {
     title: "Page not found",

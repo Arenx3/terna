@@ -1,3 +1,9 @@
-"""WebSocket routes, served under /ws/ by nginx. The real-time pipeline adds its consumers here."""
+"""WebSocket routes, served under /ws/ by nginx."""
 
-websocket_urlpatterns: list = []
+from django.urls import path
+
+from candidates.realtime import JobBoardConsumer
+
+websocket_urlpatterns: list = [
+    path("ws/jobs/<uuid:job_id>/board/", JobBoardConsumer.as_asgi()),
+]

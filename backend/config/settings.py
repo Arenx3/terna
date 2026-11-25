@@ -206,6 +206,7 @@ SPECTACULAR_SETTINGS = {
         "StageKindEnum": "jobs.models.StageKind",
         "EventTypeEnum": "events.models.EventType",
         "SalaryPeriodEnum": "jobs.models.Job.SalaryPeriod",
+        "RejectionReasonEnum": "candidates.models.Application.RejectionReason",
     },
 }
 

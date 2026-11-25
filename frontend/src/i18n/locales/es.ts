@@ -218,6 +218,8 @@ export const es: Resources = {
     },
   },
   errors: {
+    stage_changed:
+      "Alguien más movió a este candidato. El tablero ya está al día.",
     form_expired:
       "Este formulario venció. Recarga la página e intenta de nuevo.",
     too_fast: "Fue muy rápido. Revisa tus datos y envía de nuevo.",
@@ -487,6 +489,7 @@ export const es: Resources = {
       },
       application: {
         submitted: "{actor} se postuló a {subject}",
+        stage_changed: "{actor} movió a {subject} a {{stage}}",
       },
     },
   },
@@ -579,6 +582,42 @@ export const es: Resources = {
     downloadResume: "Descargar el CV de {{name}}",
     applied: "Se postuló {{time}}",
     loadError: "No pudimos cargar los candidatos.",
+  },
+  board: {
+    label: "Tablero del pipeline",
+    instructions:
+      "Arrastra una tarjeta a otra etapa, o abre su menú para moverla con el teclado.",
+    live: "En vivo",
+    connecting: "Conectando…",
+    offline: "Reconectando…",
+    alsoHere: "También en este tablero",
+    more: "+{{count}}",
+    emptyColumn: "Nadie aquí",
+    actionsFor: "Acciones para {{name}}",
+    moveTo: "Mover a",
+    inStage: "En esta etapa {{time}}",
+    moved: "{{name}} pasó a {{stage}}.",
+    movedBy: "{{by}} movió a {{name}} a {{stage}}.",
+    added: "{{name}} se postuló.",
+    moveFailed: "No se pudo mover a {{name}}. Volvió a su lugar.",
+    reject: {
+      title: "¿Descartar a {{name}}?",
+      description:
+        "Elige el motivo. Queda registrado con la decisión; el candidato no lo ve.",
+      reason: "Motivo",
+      note: "Nota",
+      optional: "(opcional)",
+      confirm: "Descartar",
+      cancel: "Cancelar",
+    },
+    reasons: {
+      requirements: "No cumple los requisitos",
+      other_candidate: "Se eligió a otra persona",
+      withdrew: "Se retiró del proceso",
+      no_response: "Dejó de responder",
+      compensation: "Expectativas salariales",
+      other: "Otro motivo",
+    },
   },
   notFound: {
     title: "No encontramos esta página",

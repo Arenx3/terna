@@ -11,11 +11,13 @@ import {
   type AuditEvent,
   type AuditFilters,
 } from "@/api/audit"
+import type { StageKind } from "@/api/jobs"
 import { membersQuery, type Role } from "@/api/team"
 import { useRole } from "@/auth/roles"
 import { useSession } from "@/auth/session"
 import { BrandMark } from "@/components/brand"
 import { ChoiceSelect } from "@/components/choice-select"
+import { useStageLabel } from "@/components/jobs/stages-editor"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -294,13 +296,20 @@ function DaySection({ day, entries }: { day: string; entries: AuditEvent[] }) {
 
 function Entry({ entry }: { entry: AuditEvent }) {
   const { t, i18n } = useTranslation()
-  const payload = (entry.payload ?? {}) as Record<string, string>
+  const stageLabel = useStageLabel()
+  const payload = (entry.payload ?? {}) as Record<string, string> & {
+    to?: { name: string; kind: StageKind }
+  }
   const role = (value?: string) =>
     value ? t(`roles.${value as Role}`).toLowerCase() : ""
   const sentence = t(`audit.events.${entry.type}`, {
     role: role(payload.role),
     from: role(payload.from),
-    to: role(payload.to),
+    to: typeof payload.to === "string" ? role(payload.to) : "",
+    stage:
+      payload.to && typeof payload.to === "object"
+        ? stageLabel(payload.to)
+        : "",
   })
   const actor = entry.actor_name || t("audit.system")
   const time = new Intl.DateTimeFormat(i18n.language, {
