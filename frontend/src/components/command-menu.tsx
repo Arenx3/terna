@@ -1,4 +1,5 @@
 import {
+  BriefcaseBusinessIcon,
   HouseIcon,
   LanguagesIcon,
   LogOutIcon,
@@ -8,6 +9,8 @@ import {
   UserPlusIcon,
   UsersIcon,
   ArrowLeftRightIcon,
+  PlusIcon,
+  WorkflowIcon,
 } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
@@ -53,7 +56,7 @@ export function CommandMenu({
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { session } = useSession()
-  const { isAdmin } = useRole()
+  const { isAdmin, canSeeJobs, canManageJobs } = useRole()
   const { setTheme } = useTheme()
   const switchCompany = useSwitchCompany()
   const logout = useLogout()
@@ -84,10 +87,24 @@ export function CommandMenu({
               <HouseIcon aria-hidden="true" />
               <Label>{t("nav.home")}</Label>
             </CommandItem>
+            {canSeeJobs ? (
+              <CommandItem onSelect={() => run(() => navigate("/jobs"))}>
+                <BriefcaseBusinessIcon aria-hidden="true" />
+                <Label>{t("nav.jobs")}</Label>
+              </CommandItem>
+            ) : null}
             <CommandItem onSelect={() => run(() => navigate("/team"))}>
               <UsersIcon aria-hidden="true" />
               <Label>{t("nav.team")}</Label>
             </CommandItem>
+            {canManageJobs ? (
+              <CommandItem
+                onSelect={() => run(() => navigate("/settings/pipeline"))}
+              >
+                <WorkflowIcon aria-hidden="true" />
+                <Label>{t("nav.pipeline")}</Label>
+              </CommandItem>
+            ) : null}
           </CommandGroup>
           {otherCompanies.length > 0 ? (
             <CommandGroup heading={t("command.companies")}>
@@ -106,6 +123,12 @@ export function CommandMenu({
             </CommandGroup>
           ) : null}
           <CommandGroup heading={t("command.actions")}>
+            {canManageJobs ? (
+              <CommandItem onSelect={() => run(() => navigate("/jobs/new"))}>
+                <PlusIcon aria-hidden="true" />
+                <Label>{t("command.newJob")}</Label>
+              </CommandItem>
+            ) : null}
             {isAdmin ? (
               <CommandItem onSelect={() => run(() => navigate("/team#invite"))}>
                 <UserPlusIcon aria-hidden="true" />

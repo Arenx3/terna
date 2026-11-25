@@ -29,7 +29,7 @@ export async function logout() {
   }
 }
 
-export function signup(body: Omit<Schemas["Signup"], "language">) {
+export function signup(body: Omit<Schemas["SignupRequest"], "language">) {
   return unwrap(
     api.POST("/api/auth/signup/", {
       body: { ...body, language: currentLanguage() },
@@ -49,7 +49,9 @@ export function requestPasswordReset(email: string) {
   return unwrap(api.POST("/api/auth/password-reset/", { body: { email } }))
 }
 
-export function confirmPasswordReset(body: Schemas["PasswordResetConfirm"]) {
+export function confirmPasswordReset(
+  body: Schemas["PasswordResetConfirmRequest"]
+) {
   return unwrap(api.POST("/api/auth/password-reset/confirm/", { body }))
 }
 
@@ -69,7 +71,7 @@ export function previewInvitation(token: string) {
 
 export async function acceptInvitation(
   token: string,
-  body: Schemas["AcceptInvitation"] = {}
+  body: Schemas["AcceptInvitationRequest"] = {}
 ) {
   const session = await unwrap(
     api.POST("/api/invitations/{token}/accept/", {

@@ -230,6 +230,101 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/jobs/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Base for views over the active company's data: members only. */
+    get: operations["jobs_list"]
+    put?: never
+    /** @description Base for views over the active company's data: members only. */
+    post: operations["jobs_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/jobs/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Base for views over the active company's data: members only. */
+    get: operations["jobs_retrieve"]
+    put?: never
+    post?: never
+    /** @description Base for views over the active company's data: members only. */
+    delete: operations["jobs_destroy"]
+    options?: never
+    head?: never
+    /** @description Base for views over the active company's data: members only. */
+    patch: operations["jobs_partial_update"]
+    trace?: never
+  }
+  "/api/jobs/{id}/close/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Base for views over the active company's data: members only. */
+    get: operations["jobs_close_retrieve"]
+    put?: never
+    /** @description Base for views over the active company's data: members only. */
+    post: operations["jobs_close_create"]
+    /** @description Base for views over the active company's data: members only. */
+    delete: operations["jobs_close_destroy"]
+    options?: never
+    head?: never
+    /** @description Base for views over the active company's data: members only. */
+    patch: operations["jobs_close_partial_update"]
+    trace?: never
+  }
+  "/api/jobs/{id}/publish/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Base for views over the active company's data: members only. */
+    get: operations["jobs_publish_retrieve"]
+    put?: never
+    /** @description Base for views over the active company's data: members only. */
+    post: operations["jobs_publish_create"]
+    /** @description Base for views over the active company's data: members only. */
+    delete: operations["jobs_publish_destroy"]
+    options?: never
+    head?: never
+    /** @description Base for views over the active company's data: members only. */
+    patch: operations["jobs_publish_partial_update"]
+    trace?: never
+  }
+  "/api/jobs/pipeline-template/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description The company's default pipeline. Everyone who manages jobs reads it; admins change it. */
+    get: operations["jobs_pipeline_template_retrieve"]
+    /** @description The company's default pipeline. Everyone who manages jobs reads it; admins change it. */
+    put: operations["jobs_pipeline_template_update"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/team/invitations/": {
     parameters: {
       query?: never
@@ -304,7 +399,7 @@ export interface paths {
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
-    AcceptInvitation: {
+    AcceptInvitationRequest: {
       full_name?: string
       password?: string
     }
@@ -318,10 +413,18 @@ export interface components {
       detail: string
       code?: string
     }
-    Email: {
+    EmailRequest: {
       /** Format: email */
       email: string
     }
+    /**
+     * @description * `full_time` - Full-time
+     *     * `part_time` - Part-time
+     *     * `contract` - Contract
+     *     * `internship` - Internship
+     * @enum {string}
+     */
+    EmploymentEnum: "full_time" | "part_time" | "contract" | "internship"
     Health: {
       status: components["schemas"]["HealthStatusEnum"]
       checks: {
@@ -366,10 +469,101 @@ export interface components {
      * @enum {string}
      */
     InvitationStatusEnum: "valid" | "expired" | "used" | "revoked"
-    Invite: {
+    InviteRequest: {
       /** Format: email */
       email: string
       role: components["schemas"]["RoleEnum"]
+    }
+    /** @description A whole job: its details, requirements and pipeline, saved together. */
+    Job: {
+      /** Format: uuid */
+      readonly id: string
+      title: string
+      department?: string
+      location?: string
+      workplace?: components["schemas"]["WorkplaceEnum"]
+      /** Employment type */
+      employment?: components["schemas"]["EmploymentEnum"]
+      language?: components["schemas"]["LanguageEnum"]
+      description?: string
+      /** Minimum salary */
+      salary_min?: number | null
+      /** Maximum salary */
+      salary_max?: number | null
+      /** Currency */
+      salary_currency?: components["schemas"]["SalaryCurrencyEnum"]
+      salary_period?: components["schemas"]["SalaryPeriodEnum"]
+      readonly status: components["schemas"]["JobStatusEnum"]
+      readonly hiring_manager: components["schemas"]["Person"] | null
+      requirements?: components["schemas"]["Requirement"][]
+      stages?: components["schemas"]["Stage"][]
+      /** Format: date-time */
+      readonly created_at: string
+      /** Format: date-time */
+      readonly updated_at: string
+      /**
+       * First published at
+       * Format: date-time
+       */
+      readonly published_at: string | null
+      /** Format: date-time */
+      readonly closed_at: string | null
+    }
+    /** @description A whole job: its details, requirements and pipeline, saved together. */
+    JobRequest: {
+      title: string
+      department?: string
+      location?: string
+      workplace?: components["schemas"]["WorkplaceEnum"]
+      /** Employment type */
+      employment?: components["schemas"]["EmploymentEnum"]
+      language?: components["schemas"]["LanguageEnum"]
+      description?: string
+      /** Minimum salary */
+      salary_min?: number | null
+      /** Maximum salary */
+      salary_max?: number | null
+      /** Currency */
+      salary_currency?: components["schemas"]["SalaryCurrencyEnum"]
+      salary_period?: components["schemas"]["SalaryPeriodEnum"]
+      /** Format: uuid */
+      hiring_manager_id?: string | null
+      requirements?: components["schemas"]["RequirementRequest"][]
+      stages?: components["schemas"]["StageRequest"][]
+    }
+    /**
+     * @description * `draft` - Draft
+     *     * `open` - Open
+     *     * `closed` - Closed
+     * @enum {string}
+     */
+    JobStatusEnum: "draft" | "open" | "closed"
+    /** @description A row of the jobs list. */
+    JobSummary: {
+      /** Format: uuid */
+      readonly id: string
+      readonly title: string
+      readonly department: string
+      readonly location: string
+      readonly workplace: components["schemas"]["WorkplaceEnum"]
+      /** Employment type */
+      readonly employment: components["schemas"]["EmploymentEnum"]
+      readonly language: components["schemas"]["LanguageEnum"]
+      readonly status: components["schemas"]["JobStatusEnum"]
+      readonly hiring_manager: components["schemas"]["Person"] | null
+      readonly must_haves: number
+      readonly nice_to_haves: number
+      /** Format: date-time */
+      readonly created_at: string
+      /** Format: date-time */
+      readonly updated_at: string
+      /**
+       * First published at
+       * Format: date-time
+       */
+      readonly published_at: string | null
+      /** Format: date-time */
+      readonly closed_at: string | null
     }
     /**
      * @description * `en` - English
@@ -377,7 +571,7 @@ export interface components {
      * @enum {string}
      */
     LanguageEnum: "en" | "es"
-    Login: {
+    LoginRequest: {
       /** Format: email */
       email: string
       password: string
@@ -396,13 +590,63 @@ export interface components {
       /** Format: email */
       email: string
     }
-    PasswordResetConfirm: {
+    PasswordResetConfirmRequest: {
       uid: string
       token: string
       password: string
     }
-    PatchedRole: {
+    /** @description A whole job: its details, requirements and pipeline, saved together. */
+    PatchedJobRequest: {
+      title?: string
+      department?: string
+      location?: string
+      workplace?: components["schemas"]["WorkplaceEnum"]
+      /** Employment type */
+      employment?: components["schemas"]["EmploymentEnum"]
+      language?: components["schemas"]["LanguageEnum"]
+      description?: string
+      /** Minimum salary */
+      salary_min?: number | null
+      /** Maximum salary */
+      salary_max?: number | null
+      /** Currency */
+      salary_currency?: components["schemas"]["SalaryCurrencyEnum"]
+      salary_period?: components["schemas"]["SalaryPeriodEnum"]
+      /** Format: uuid */
+      hiring_manager_id?: string | null
+      requirements?: components["schemas"]["RequirementRequest"][]
+      stages?: components["schemas"]["StageRequest"][]
+    }
+    PatchedRoleRequest: {
       role?: components["schemas"]["RoleEnum"]
+    }
+    Person: {
+      /** Format: uuid */
+      readonly id: string
+      full_name: string
+      /** Format: email */
+      email: string
+    }
+    PersonRequest: {
+      full_name: string
+      /** Format: email */
+      email: string
+    }
+    Requirement: {
+      id?: number | null
+      text: string
+      kind: components["schemas"]["RequirementKindEnum"]
+    }
+    /**
+     * @description * `must` - Must-have
+     *     * `nice` - Nice-to-have
+     * @enum {string}
+     */
+    RequirementKindEnum: "must" | "nice"
+    RequirementRequest: {
+      id?: number | null
+      text: string
+      kind: components["schemas"]["RequirementKindEnum"]
     }
     /**
      * @description * `admin` - Admin
@@ -412,6 +656,18 @@ export interface components {
      * @enum {string}
      */
     RoleEnum: "admin" | "recruiter" | "hiring_manager" | "interviewer"
+    /**
+     * @description * `MXN` - MXN
+     *     * `USD` - USD
+     * @enum {string}
+     */
+    SalaryCurrencyEnum: "MXN" | "USD"
+    /**
+     * @description * `month` - Per month
+     *     * `year` - Per year
+     * @enum {string}
+     */
+    SalaryPeriodEnum: "month" | "year"
     /** @description What the app needs after login or refresh: who, and in which company. */
     Session: {
       access: string
@@ -419,7 +675,7 @@ export interface components {
       company: components["schemas"]["Company"]
       companies: components["schemas"]["Company"][]
     }
-    Signup: {
+    SignupRequest: {
       company_name: string
       full_name: string
       /** Format: email */
@@ -428,11 +684,40 @@ export interface components {
       /** @default en */
       language: components["schemas"]["LanguageEnum"]
     }
-    SwitchCompany: {
+    Stage: {
+      id?: number | null
+      /** @default  */
+      name: string
+      kind: components["schemas"]["StageKindEnum"]
+    }
+    /**
+     * @description * `applied` - Applied
+     *     * `screening` - Screening
+     *     * `interview` - Interview
+     *     * `offer` - Offer
+     *     * `hired` - Hired
+     *     * `rejected` - Rejected
+     * @enum {string}
+     */
+    StageKindEnum:
+      "applied" | "screening" | "interview" | "offer" | "hired" | "rejected"
+    StageList: {
+      stages: components["schemas"]["Stage"][]
+    }
+    StageListRequest: {
+      stages: components["schemas"]["StageRequest"][]
+    }
+    StageRequest: {
+      id?: number | null
+      /** @default  */
+      name: string
+      kind: components["schemas"]["StageKindEnum"]
+    }
+    SwitchCompanyRequest: {
       /** Format: uuid */
       company_id: string
     }
-    Token: {
+    TokenRequest: {
       token: string
     }
     User: {
@@ -443,6 +728,13 @@ export interface components {
       full_name: string
       language?: components["schemas"]["LanguageEnum"]
     }
+    /**
+     * @description * `onsite` - On-site
+     *     * `hybrid` - Hybrid
+     *     * `remote` - Remote
+     * @enum {string}
+     */
+    WorkplaceEnum: "onsite" | "hybrid" | "remote"
   }
   responses: never
   parameters: never
@@ -461,9 +753,9 @@ export interface operations {
     }
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Login"]
-        "application/x-www-form-urlencoded": components["schemas"]["Login"]
-        "multipart/form-data": components["schemas"]["Login"]
+        "application/json": components["schemas"]["LoginRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["LoginRequest"]
+        "multipart/form-data": components["schemas"]["LoginRequest"]
       }
     }
     responses: {
@@ -523,9 +815,9 @@ export interface operations {
     }
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Email"]
-        "application/x-www-form-urlencoded": components["schemas"]["Email"]
-        "multipart/form-data": components["schemas"]["Email"]
+        "application/json": components["schemas"]["EmailRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["EmailRequest"]
+        "multipart/form-data": components["schemas"]["EmailRequest"]
       }
     }
     responses: {
@@ -548,9 +840,9 @@ export interface operations {
     }
     requestBody: {
       content: {
-        "application/json": components["schemas"]["PasswordResetConfirm"]
-        "application/x-www-form-urlencoded": components["schemas"]["PasswordResetConfirm"]
-        "multipart/form-data": components["schemas"]["PasswordResetConfirm"]
+        "application/json": components["schemas"]["PasswordResetConfirmRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["PasswordResetConfirmRequest"]
+        "multipart/form-data": components["schemas"]["PasswordResetConfirmRequest"]
       }
     }
     responses: {
@@ -599,9 +891,9 @@ export interface operations {
     }
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Signup"]
-        "application/x-www-form-urlencoded": components["schemas"]["Signup"]
-        "multipart/form-data": components["schemas"]["Signup"]
+        "application/json": components["schemas"]["SignupRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["SignupRequest"]
+        "multipart/form-data": components["schemas"]["SignupRequest"]
       }
     }
     responses: {
@@ -624,9 +916,9 @@ export interface operations {
     }
     requestBody: {
       content: {
-        "application/json": components["schemas"]["SwitchCompany"]
-        "application/x-www-form-urlencoded": components["schemas"]["SwitchCompany"]
-        "multipart/form-data": components["schemas"]["SwitchCompany"]
+        "application/json": components["schemas"]["SwitchCompanyRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["SwitchCompanyRequest"]
+        "multipart/form-data": components["schemas"]["SwitchCompanyRequest"]
       }
     }
     responses: {
@@ -649,9 +941,9 @@ export interface operations {
     }
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Token"]
-        "application/x-www-form-urlencoded": components["schemas"]["Token"]
-        "multipart/form-data": components["schemas"]["Token"]
+        "application/json": components["schemas"]["TokenRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["TokenRequest"]
+        "multipart/form-data": components["schemas"]["TokenRequest"]
       }
     }
     responses: {
@@ -674,9 +966,9 @@ export interface operations {
     }
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Email"]
-        "application/x-www-form-urlencoded": components["schemas"]["Email"]
-        "multipart/form-data": components["schemas"]["Email"]
+        "application/json": components["schemas"]["EmailRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["EmailRequest"]
+        "multipart/form-data": components["schemas"]["EmailRequest"]
       }
     }
     responses: {
@@ -749,9 +1041,9 @@ export interface operations {
     }
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["AcceptInvitation"]
-        "application/x-www-form-urlencoded": components["schemas"]["AcceptInvitation"]
-        "multipart/form-data": components["schemas"]["AcceptInvitation"]
+        "application/json": components["schemas"]["AcceptInvitationRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["AcceptInvitationRequest"]
+        "multipart/form-data": components["schemas"]["AcceptInvitationRequest"]
       }
     }
     responses: {
@@ -761,6 +1053,342 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Session"]
+        }
+      }
+    }
+  }
+  jobs_list: {
+    parameters: {
+      query?: {
+        status?: "closed" | "draft" | "open"
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["JobSummary"][]
+        }
+      }
+    }
+  }
+  jobs_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["JobRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["JobRequest"]
+        "multipart/form-data": components["schemas"]["JobRequest"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  jobs_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedJobRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedJobRequest"]
+        "multipart/form-data": components["schemas"]["PatchedJobRequest"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_close_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_close_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_close_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  jobs_close_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedJobRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedJobRequest"]
+        "multipart/form-data": components["schemas"]["PatchedJobRequest"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_publish_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_publish_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_publish_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  jobs_publish_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedJobRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedJobRequest"]
+        "multipart/form-data": components["schemas"]["PatchedJobRequest"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Job"]
+        }
+      }
+    }
+  }
+  jobs_pipeline_template_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["StageList"]
+        }
+      }
+    }
+  }
+  jobs_pipeline_template_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["StageListRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["StageListRequest"]
+        "multipart/form-data": components["schemas"]["StageListRequest"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["StageList"]
         }
       }
     }
@@ -793,9 +1421,9 @@ export interface operations {
     }
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Invite"]
-        "application/x-www-form-urlencoded": components["schemas"]["Invite"]
-        "multipart/form-data": components["schemas"]["Invite"]
+        "application/json": components["schemas"]["InviteRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["InviteRequest"]
+        "multipart/form-data": components["schemas"]["InviteRequest"]
       }
     }
     responses: {
@@ -879,9 +1507,9 @@ export interface operations {
     }
     requestBody?: {
       content: {
-        "application/json": components["schemas"]["PatchedRole"]
-        "application/x-www-form-urlencoded": components["schemas"]["PatchedRole"]
-        "multipart/form-data": components["schemas"]["PatchedRole"]
+        "application/json": components["schemas"]["PatchedRoleRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedRoleRequest"]
+        "multipart/form-data": components["schemas"]["PatchedRoleRequest"]
       }
     }
     responses: {

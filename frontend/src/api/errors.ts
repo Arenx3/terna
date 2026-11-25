@@ -43,6 +43,9 @@ const KNOWN_CODES = [
   "invitation_email_mismatch",
   "login_required",
   "account_details_required",
+  "role_forbidden",
+  "publish_needs_must_have",
+  "job_not_draft",
 ] as const
 
 type KnownCode = (typeof KNOWN_CODES)[number]
