@@ -3,8 +3,10 @@ import { createBrowserRouter } from "react-router"
 import { AppShell } from "@/components/app-shell"
 import { AuthLayout } from "@/components/auth-layout"
 import { CareersLayout } from "@/components/careers-layout"
+import { ProfileSheet } from "@/components/profile/profile-sheet"
 import { GuestOnly, RequireAuth } from "@/components/route-guards"
 import { AcceptInvitationPage } from "@/pages/accept-invitation-page"
+import { ApplicationPage } from "@/pages/application-page"
 import { AuditPage } from "@/pages/audit-page"
 import { CareersPage } from "@/pages/careers-page"
 import { CheckEmailPage } from "@/pages/check-email-page"
@@ -34,7 +36,12 @@ export const router = createBrowserRouter([
           { path: "jobs", element: <JobsPage /> },
           { path: "jobs/new", element: <JobEditorPage /> },
           { path: "jobs/:jobId", element: <JobEditorPage /> },
-          { path: "jobs/:jobId/candidates", element: <JobCandidatesPage /> },
+          {
+            path: "jobs/:jobId/candidates",
+            element: <JobCandidatesPage />,
+            children: [{ path: ":applicationId", element: <ProfileSheet /> }],
+          },
+          { path: "applications/:applicationId", element: <ApplicationPage /> },
           { path: "team", element: <TeamPage /> },
           { path: "settings/pipeline", element: <PipelinePage /> },
           { path: "settings/audit", element: <AuditPage /> },

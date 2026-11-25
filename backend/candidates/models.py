@@ -1,6 +1,7 @@
 import uuid
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -153,3 +154,106 @@ class ConsentRecord(TenantModel):
 
     def __str__(self) -> str:
         return f"{self.candidate_id} accepted {self.notice_version}"
+
+
+class InterviewerAssignment(TenantModel):
+    """An interviewer working on one application: the only candidates they can see."""
+
+    application = models.ForeignKey(
+        Application,
+        on_delete=models.CASCADE,
+        related_name="assignments",
+        verbose_name=_("application"),
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name=_("interviewer"),
+    )
+    created_at = models.DateTimeField(_("assigned at"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("interviewer assignment")
+        verbose_name_plural = _("interviewer assignments")
+        constraints = [  # noqa: RUF012 (Django API)
+            models.UniqueConstraint(
+                fields=["application", "user"], name="candidates_assignment_once"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user_id} on {self.application_id}"
+
+
+class Comment(TenantModel):
+    """An internal note on an application. Never shown to the candidate."""
+
+    application = models.ForeignKey(
+        Application,
+        on_delete=models.CASCADE,
+        related_name="comments",
+        verbose_name=_("application"),
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="+",
+        verbose_name=_("author"),
+    )
+    # Kept as written, so the thread still reads right after someone leaves.
+    author_name = models.CharField(_("author name"), max_length=150)
+    body = models.TextField(_("body"), max_length=5000)
+    mentions = ArrayField(models.UUIDField(), default=list, blank=True, verbose_name=_("mentions"))
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("comment")
+        verbose_name_plural = _("comments")
+        ordering = ["created_at"]  # noqa: RUF012
+
+    def __str__(self) -> str:
+        return f"{self.author_name}: {self.body[:40]}"
+
+
+class Notification(TenantModel):
+    """Something a person should look at, in the company where it happened."""
+
+    class Kind(models.TextChoices):
+        MENTION = "mention", _("Mentioned in a comment")
+        ASSIGNED = "assigned", _("Assigned to interview")
+
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name=_("recipient"),
+    )
+    kind = models.CharField(_("kind"), max_length=20, choices=Kind.choices)
+    application = models.ForeignKey(
+        Application, on_delete=models.CASCADE, related_name="+", verbose_name=_("application")
+    )
+    comment = models.ForeignKey(
+        Comment, on_delete=models.CASCADE, null=True, related_name="+", verbose_name=_("comment")
+    )
+    actor_name = models.CharField(_("actor name"), max_length=150)
+    # The outbox event behind it: redelivering the event never notifies twice.
+    source_event_id = models.BigIntegerField(_("source event"))
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    read_at = models.DateTimeField(_("read at"), null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("notification")
+        verbose_name_plural = _("notifications")
+        constraints = [  # noqa: RUF012 (Django API)
+            models.UniqueConstraint(
+                fields=["source_event_id", "recipient"], name="candidates_notification_once"
+            ),
+        ]
+        indexes = [  # noqa: RUF012
+            models.Index(fields=["company", "recipient", "read_at"], name="candidates_inbox"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.kind} for {self.recipient_id}"

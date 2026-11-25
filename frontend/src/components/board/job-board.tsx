@@ -12,6 +12,7 @@ import {
 import { CheckIcon, DownloadIcon, EllipsisVerticalIcon } from "lucide-react"
 import { useId, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router"
 
 import {
   REJECTION_REASONS,
@@ -62,11 +63,14 @@ export function JobBoard({
   applications,
   canMove,
   onMove,
+  profileHref,
 }: {
   stages: BoardStage[]
   applications: JobApplication[]
   canMove: boolean
   onMove: (request: MoveRequest) => void
+  /** Where a card's name leads: the candidate's profile. */
+  profileHref: (application: JobApplication) => string
 }) {
   const { t } = useTranslation()
   const instructionsId = useId()
@@ -117,6 +121,7 @@ export function JobBoard({
               stages={stages}
               canMove={canMove}
               onRequest={request}
+              profileHref={profileHref}
             />
           ))}
         </div>
@@ -148,12 +153,14 @@ function Column({
   applications,
   canMove,
   onRequest,
+  profileHref,
 }: {
   stage: BoardStage
   stages: BoardStage[]
   applications: JobApplication[]
   canMove: boolean
   onRequest: (application: JobApplication, stage: BoardStage) => void
+  profileHref: (application: JobApplication) => string
 }) {
   const { t } = useTranslation()
   const label = useStageLabel()
@@ -191,6 +198,7 @@ function Column({
               stages={stages}
               canMove={canMove}
               onRequest={onRequest}
+              href={profileHref(application)}
             />
           ))
         )}
@@ -204,11 +212,13 @@ function Card({
   stages,
   canMove,
   onRequest,
+  href,
 }: {
   application: JobApplication
   stages: BoardStage[]
   canMove: boolean
   onRequest: (application: JobApplication, stage: BoardStage) => void
+  href: string
 }) {
   const { t } = useTranslation()
   const label = useStageLabel()
@@ -235,6 +245,7 @@ function Card({
     >
       <CardBody
         application={application}
+        href={href}
         menu={
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -290,10 +301,12 @@ function Card({
 
 function CardBody({
   application,
+  href,
   menu,
   className,
 }: {
   application: JobApplication
+  href?: string
   menu?: ReactNode
   className?: string
 }) {
@@ -302,7 +315,7 @@ function CardBody({
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 rounded-lg border bg-card p-3",
+        "relative flex flex-col gap-2 rounded-lg border bg-card p-3 transition-colors has-[a:hover]:border-foreground/20",
         className
       )}
     >
@@ -314,14 +327,24 @@ function CardBody({
           {initials(candidate.full_name)}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm font-medium">
-            {candidate.full_name}
-          </span>
+          {href ? (
+            // The whole card is the link's target area; the name carries the label.
+            <Link
+              to={href}
+              className="truncate rounded-sm text-sm font-medium after:absolute after:inset-0 after:rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              {candidate.full_name}
+            </Link>
+          ) : (
+            <span className="truncate text-sm font-medium">
+              {candidate.full_name}
+            </span>
+          )}
           <span className="truncate text-xs text-muted-foreground">
             {candidate.email}
           </span>
         </span>
-        {menu}
+        {menu ? <span className="relative z-10">{menu}</span> : null}
       </div>
       <div className="flex items-center justify-between gap-2 text-xs text-faint-foreground">
         <span>

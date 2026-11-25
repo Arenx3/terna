@@ -6,6 +6,8 @@ from django.template.loader import render_to_string
 
 from candidates import storage
 from candidates.models import Application
+from events.models import EventType
+from events.outbox import emit
 from tenancy.models import Company
 from tenancy.tasks import tenant_task
 
@@ -34,6 +36,15 @@ def send_application_received(company_id: str, application_id: int) -> None:
     subject = render_to_string(f"{folder}/application_received_subject.txt", context).strip()
     body = render_to_string(f"{folder}/application_received.txt", context)
     send_mail(subject, body, None, [candidate.email])
+    # On the candidate's timeline: what they were told, and when.
+    emit(
+        EventType.EMAIL_SENT,
+        entity_type="application",
+        entity_id=application.id,
+        label=candidate.full_name,
+        payload={"template": "application_received", "language": language},
+        actor=None,
+    )
 
 
 @shared_task(ignore_result=True)

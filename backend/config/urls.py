@@ -4,7 +4,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from accounts.team_urls import public_urlpatterns as invitation_urls
 from accounts.team_views import CurrentCompanyView
-from candidates.views import JobApplicationsView, MoveApplicationView, ResumeLinkView
+from candidates import profile
+from candidates.views import JobApplicationsView, MoveApplicationView
 from core.views import HealthView, liveness
 from events.views import AuditLogView
 
@@ -25,7 +26,25 @@ urlpatterns = [
         JobApplicationsView.as_view(),
         name="job-applications",
     ),
-    path("api/applications/<int:pk>/resume/", ResumeLinkView.as_view(), name="resume-link"),
+    path("api/applications/<int:pk>/", profile.ProfileView.as_view(), name="application"),
+    path("api/applications/<int:pk>/resume/", profile.ResumeView.as_view(), name="resume-link"),
+    path(
+        "api/applications/<int:pk>/timeline/",
+        profile.TimelineView.as_view(),
+        name="application-timeline",
+    ),
+    path(
+        "api/applications/<int:pk>/comments/",
+        profile.CommentsView.as_view(),
+        name="application-comments",
+    ),
+    path(
+        "api/applications/<int:pk>/interviewers/",
+        profile.InterviewersView.as_view(),
+        name="application-interviewers",
+    ),
+    path("api/notifications/", profile.InboxView.as_view(), name="notifications"),
+    path("api/notifications/read/", profile.MarkReadView.as_view(), name="notifications-read"),
     path(
         "api/applications/<int:pk>/move/",
         MoveApplicationView.as_view(),

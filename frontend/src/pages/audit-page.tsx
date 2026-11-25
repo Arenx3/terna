@@ -310,6 +310,11 @@ function Entry({ entry }: { entry: AuditEvent }) {
       payload.to && typeof payload.to === "object"
         ? stageLabel(payload.to)
         : "",
+    names: Array.isArray(
+      (entry.payload as { interviewers?: unknown })?.interviewers
+    )
+      ? (entry.payload as { interviewers: string[] }).interviewers.join(", ")
+      : "",
   })
   const actor = entry.actor_name || t("audit.system")
   const time = new Intl.DateTimeFormat(i18n.language, {
