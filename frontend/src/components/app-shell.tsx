@@ -16,6 +16,7 @@ import { BrandMark } from "@/components/brand"
 import { CommandMenu } from "@/components/command-menu"
 import { CompanySwitcher } from "@/components/company-switcher"
 import { LanguageMenu } from "@/components/language-menu"
+import { NotificationsMenu } from "@/components/notifications-menu"
 import { ThemeMenu } from "@/components/theme-menu"
 import { Button } from "@/components/ui/button"
 import { Kbd } from "@/components/ui/kbd"
@@ -170,6 +171,7 @@ export function AppShell() {
             </Kbd>
           </Button>
           <div className="flex items-center gap-1">
+            <NotificationsMenu />
             <LanguageMenu />
             <ThemeMenu />
           </div>

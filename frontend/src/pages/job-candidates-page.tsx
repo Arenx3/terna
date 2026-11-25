@@ -7,7 +7,7 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Link, useParams } from "react-router"
+import { Link, Outlet, useParams } from "react-router"
 
 import {
   jobApplicationsQuery,
@@ -243,8 +243,13 @@ export function JobCandidatesPage() {
           applications={applications.data}
           canMove={canManageJobs}
           onMove={(request) => move.mutate(request)}
+          profileHref={(application) =>
+            `/jobs/${jobId}/candidates/${application.id}`
+          }
         />
       )}
+      {/* The candidate profile opens here, over the board. */}
+      <Outlet />
     </div>
   )
 }

@@ -5,9 +5,11 @@ class CandidatesConfig(AppConfig):
     name = "candidates"
 
     def ready(self) -> None:
-        # Live boards hear about new and moved candidates through the outbox.
-        from candidates import realtime
+        # Through the outbox: live boards hear about new and moved candidates,
+        # and mentions and assignments become notifications.
+        from candidates import collaboration, realtime
         from events import dispatch
 
-        if realtime.broadcast not in dispatch.CONSUMERS:
-            dispatch.CONSUMERS.append(realtime.broadcast)
+        for consumer in (realtime.broadcast, collaboration.notify):
+            if consumer not in dispatch.CONSUMERS:
+                dispatch.CONSUMERS.append(consumer)

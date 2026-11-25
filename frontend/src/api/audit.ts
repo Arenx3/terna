@@ -10,6 +10,9 @@ export type EventType = Schemas["EventTypeEnum"]
 export const AUDIT_AREAS = [
   "job",
   "application",
+  "comment",
+  "candidate",
+  "email",
   "member",
   "invitation",
 ] as const

@@ -40,14 +40,16 @@ def upload_url(key: str, content_type: str) -> str:
     )
 
 
-def download_url(key: str, filename: str) -> str:
+def download_url(key: str, filename: str, *, inline: bool = False) -> str:
+    """Five minutes to open or download the file, straight from storage."""
     safe_name = filename.replace('"', "")
+    disposition = "inline" if inline else "attachment"
     return s3_client(public=True).generate_presigned_url(
         "get_object",
         Params={
             "Bucket": settings.STORAGE_BUCKET,
             "Key": key,
-            "ResponseContentDisposition": f'attachment; filename="{safe_name}"',
+            "ResponseContentDisposition": f'{disposition}; filename="{safe_name}"',
         },
         ExpiresIn=DOWNLOAD_URL_SECONDS,
     )

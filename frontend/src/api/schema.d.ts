@@ -4,6 +4,74 @@
  */
 
 export interface paths {
+  "/api/applications/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    get: operations["applications_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/applications/{id}/comments/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    get: operations["applications_comments_list"]
+    put?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    post: operations["applications_comments_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/applications/{id}/interviewers/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    put: operations["applications_interviewers_update"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/applications/{id}/move/": {
     parameters: {
       query?: never
@@ -28,8 +96,25 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** @description A short-lived download link. The file goes from storage to the browser. */
+    /** @description A short-lived link to the résumé, to download or to show in the browser. */
     get: operations["applications_resume_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/applications/{id}/timeline/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description What happened to this candidate, across the jobs the caller can see. */
+    get: operations["applications_timeline_list"]
     put?: never
     post?: never
     delete?: never
@@ -534,6 +619,48 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/notifications/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    get: operations["notifications_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/notifications/read/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    post: operations["notifications_read_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/team/invitations/": {
     parameters: {
       query?: never
@@ -716,6 +843,14 @@ export interface components {
       company: components["schemas"]["PublicCompany"]
       jobs: components["schemas"]["PublicJobSummary"][]
     }
+    Comment: {
+      readonly id: number
+      readonly author_name: string
+      readonly body: string
+      readonly mentions: string[]
+      /** Format: date-time */
+      readonly created_at: string
+    }
     Company: {
       /** Format: uuid */
       id: string
@@ -817,6 +952,10 @@ export interface components {
      *     * `invitation.revoked` - Invitation cancelled
      *     * `application.submitted` - Application submitted
      *     * `application.stage_changed` - Application moved
+     *     * `application.assigned` - Interviewers assigned
+     *     * `candidate.viewed` - Candidate profile viewed
+     *     * `comment.created` - Comment added
+     *     * `email.sent` - Email sent to a candidate
      * @enum {string}
      */
     EventTypeEnum:
@@ -832,6 +971,10 @@ export interface components {
       | "invitation.revoked"
       | "application.submitted"
       | "application.stage_changed"
+      | "application.assigned"
+      | "candidate.viewed"
+      | "comment.created"
+      | "email.sent"
     /**
      * @description * `pdf` - PDF
      *     * `docx` - DOCX
@@ -855,6 +998,13 @@ export interface components {
      * @enum {string}
      */
     HealthStatusEnum: "ok" | "error"
+    Inbox: {
+      unread: number
+      items: components["schemas"]["Notification"][]
+    }
+    InterviewersRequest: {
+      users: string[]
+    }
     Invitation: {
       readonly id: number
       /** Format: email */
@@ -993,6 +1143,9 @@ export interface components {
       email: string
       password: string
     }
+    MarkReadRequest: {
+      ids?: number[]
+    }
     Member: {
       readonly id: number
       readonly user: components["schemas"]["MemberUser"]
@@ -1016,6 +1169,39 @@ export interface components {
         | components["schemas"]["BlankEnum"]
       /** @default  */
       note: string
+    }
+    NewCommentRequest: {
+      body: string
+      mentions?: string[]
+    }
+    Notification: {
+      readonly id: number
+      readonly kind: components["schemas"]["NotificationKindEnum"]
+      readonly actor_name: string
+      readonly application: number
+      readonly candidate: string
+      /** Format: uuid */
+      readonly job_id: string
+      /** Format: date-time */
+      readonly created_at: string
+      /** Format: date-time */
+      readonly read_at: string | null
+    }
+    /**
+     * @description * `mention` - Mentioned in a comment
+     *     * `assigned` - Assigned to interview
+     * @enum {string}
+     */
+    NotificationKindEnum: "mention" | "assigned"
+    OtherApplication: {
+      readonly id: number
+      readonly job: components["schemas"]["ProfileJob"]
+      readonly stage: components["schemas"]["ApplicationStage"]
+      /**
+       * Applied at
+       * Format: date-time
+       */
+      readonly created_at: string
     }
     PasswordResetConfirmRequest: {
       uid: string
@@ -1059,6 +1245,49 @@ export interface components {
       full_name: string
       /** Format: email */
       email: string
+    }
+    Profile: {
+      readonly id: number
+      readonly candidate: components["schemas"]["ProfileCandidate"]
+      readonly job: components["schemas"]["ProfileJob"]
+      readonly stage: components["schemas"]["ApplicationStage"]
+      /**
+       * In this stage since
+       * Format: date-time
+       */
+      readonly stage_entered_at: string
+      readonly rejection_reason:
+        | components["schemas"]["RejectionReasonEnum"]
+        | components["schemas"]["BlankEnum"]
+      readonly rejection_note: string
+      readonly resume: components["schemas"]["ResumeFile"] | null
+      readonly source: components["schemas"]["SourceEnum"]
+      /**
+       * Applied at
+       * Format: date-time
+       */
+      readonly created_at: string
+      readonly other_applications: components["schemas"]["OtherApplication"][]
+      readonly interviewers: components["schemas"]["Teammate"][]
+      /** @description People who can open this candidate. */
+      readonly team: components["schemas"]["Teammate"][]
+      readonly can_manage: boolean
+    }
+    ProfileCandidate: {
+      id: number
+      full_name: string
+      /** Format: email */
+      email: string
+      phone: string
+      language: string
+      /** Format: date-time */
+      created_at: string
+    }
+    ProfileJob: {
+      /** Format: uuid */
+      readonly id: string
+      readonly title: string
+      readonly status: components["schemas"]["JobStatusEnum"]
     }
     PublicCompany: {
       name: string
@@ -1236,6 +1465,21 @@ export interface components {
       /** Format: uuid */
       company_id: string
     }
+    Teammate: {
+      /** Format: uuid */
+      readonly id: string
+      readonly full_name: string
+    }
+    TimelineEvent: {
+      readonly id: number
+      readonly type: components["schemas"]["EventTypeEnum"]
+      readonly actor_name: string
+      readonly entity_id: string
+      readonly entity_label: string
+      readonly payload: unknown
+      /** Format: date-time */
+      readonly occurred_at: string
+    }
     TokenRequest: {
       token: string
     }
@@ -1278,6 +1522,102 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  applications_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Profile"]
+        }
+      }
+    }
+  }
+  applications_comments_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Comment"][]
+        }
+      }
+    }
+  }
+  applications_comments_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["NewCommentRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["NewCommentRequest"]
+        "multipart/form-data": components["schemas"]["NewCommentRequest"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Comment"]
+        }
+      }
+    }
+  }
+  applications_interviewers_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InterviewersRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["InterviewersRequest"]
+        "multipart/form-data": components["schemas"]["InterviewersRequest"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Teammate"][]
+        }
+      }
+    }
+  }
   applications_move_create: {
     parameters: {
       query?: never
@@ -1307,7 +1647,10 @@ export interface operations {
   }
   applications_resume_retrieve: {
     parameters: {
-      query?: never
+      query?: {
+        /** @description Open in the browser. */
+        inline?: boolean
+      }
       header?: never
       path: {
         id: number
@@ -1322,6 +1665,27 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["ResumeLink"]
+        }
+      }
+    }
+  }
+  applications_timeline_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TimelineEvent"][]
         }
       }
     }
@@ -2165,6 +2529,49 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["StageList"]
         }
+      }
+    }
+  }
+  notifications_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Inbox"]
+        }
+      }
+    }
+  }
+  notifications_read_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["MarkReadRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["MarkReadRequest"]
+        "multipart/form-data": components["schemas"]["MarkReadRequest"]
+      }
+    }
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }

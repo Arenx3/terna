@@ -22,6 +22,10 @@ class EventType(models.TextChoices):
     INVITATION_REVOKED = "invitation.revoked", _("Invitation cancelled")
     APPLICATION_SUBMITTED = "application.submitted", _("Application submitted")
     APPLICATION_STAGE_CHANGED = "application.stage_changed", _("Application moved")
+    APPLICATION_ASSIGNED = "application.assigned", _("Interviewers assigned")
+    CANDIDATE_VIEWED = "candidate.viewed", _("Candidate profile viewed")
+    COMMENT_CREATED = "comment.created", _("Comment added")
+    EMAIL_SENT = "email.sent", _("Email sent to a candidate")
 
 
 class EventFields(models.Model):
