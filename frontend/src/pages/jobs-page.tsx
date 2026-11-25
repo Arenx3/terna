@@ -2,12 +2,14 @@ import { useQuery } from "@tanstack/react-query"
 import {
   BriefcaseBusinessIcon,
   CircleAlertIcon,
+  ExternalLinkIcon,
   LockIcon,
   PlusIcon,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link, useSearchParams } from "react-router"
 
+import { currentCompanyQuery } from "@/api/careers"
 import { jobsQuery, type JobStatus, type JobSummary } from "@/api/jobs"
 import { useRole } from "@/auth/roles"
 import { useSession } from "@/auth/session"
@@ -42,6 +44,10 @@ export function JobsPage() {
 
   const companyId = session?.company.id ?? ""
   const jobs = useQuery({ ...jobsQuery(companyId), enabled: canSeeJobs })
+  const company = useQuery({
+    ...currentCompanyQuery(companyId),
+    enabled: canSeeJobs,
+  })
 
   if (!canSeeJobs) {
     return (
@@ -80,12 +86,25 @@ export function JobsPage() {
             {canManageJobs ? t("jobs.description") : t("jobs.descriptionOwner")}
           </p>
         </div>
-        {canManageJobs ? (
-          <Link to="/jobs/new" className={buttonVariants()}>
-            <PlusIcon data-icon="inline-start" aria-hidden="true" />
-            {t("jobs.new")}
-          </Link>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {company.data ? (
+            <a
+              href={`/careers/${company.data.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <ExternalLinkIcon data-icon="inline-start" aria-hidden="true" />
+              {t("jobs.careersPage")}
+            </a>
+          ) : null}
+          {canManageJobs ? (
+            <Link to="/jobs/new" className={buttonVariants()}>
+              <PlusIcon data-icon="inline-start" aria-hidden="true" />
+              {t("jobs.new")}
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       {jobs.isPending ? (

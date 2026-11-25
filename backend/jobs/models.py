@@ -24,6 +24,35 @@ class StageKind(models.TextChoices):
     REJECTED = "rejected", _("Rejected")
 
 
+# ISO 3166-1 alpha-2. Clients show the names in the reader's language.
+COUNTRIES = (
+    "MX",
+    "US",
+    "CA",
+    "GT",
+    "SV",
+    "HN",
+    "NI",
+    "CR",
+    "PA",
+    "CU",
+    "DO",
+    "PR",
+    "CO",
+    "VE",
+    "EC",
+    "PE",
+    "BO",
+    "CL",
+    "AR",
+    "UY",
+    "PY",
+    "BR",
+    "ES",
+    "PT",
+)
+
+
 class Job(TenantModel):
     class Status(models.TextChoices):
         DRAFT = "draft", _("Draft")
@@ -54,6 +83,9 @@ class Job(TenantModel):
     title = models.CharField(_("title"), max_length=160)
     department = models.CharField(_("department"), max_length=120, blank=True)
     location = models.CharField(_("location"), max_length=160, blank=True)
+    country = models.CharField(
+        _("country"), max_length=2, choices=[(code, code) for code in COUNTRIES], default="MX"
+    )
     workplace = models.CharField(
         _("workplace"), max_length=10, choices=Workplace.choices, default=Workplace.ONSITE
     )

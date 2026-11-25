@@ -140,6 +140,8 @@ REST_FRAMEWORK = {
         "password_reset_confirm": "20/hour",
         "invite": "50/hour",
         "invitation": "60/hour",
+        # Public careers pages, per visitor IP.
+        "careers": "120/min",
     },
 }
 
@@ -200,6 +202,7 @@ SPECTACULAR_SETTINGS = {
         "RequirementKindEnum": "jobs.models.Requirement.Kind",
         "StageKindEnum": "jobs.models.StageKind",
         "EventTypeEnum": "events.models.EventType",
+        "SalaryPeriodEnum": "jobs.models.Job.SalaryPeriod",
     },
 }
 
