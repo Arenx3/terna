@@ -31,6 +31,7 @@ import { membersQuery } from "@/api/team"
 import { useRole } from "@/auth/roles"
 import { useSession } from "@/auth/session"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
+import { CandidateEmails } from "@/components/profile/candidate-emails"
 import { useStageLabel } from "@/components/jobs/stages-editor"
 import {
   mentionedIn,
@@ -172,6 +173,7 @@ function ProfileBody({
             {t("profile.tabs.activity")}
           </TabsTrigger>
           <TabsTrigger value="resume">{t("profile.tabs.resume")}</TabsTrigger>
+          <TabsTrigger value="emails">{t("profile.tabs.emails")}</TabsTrigger>
           <TabsTrigger value="applications">
             {t("profile.tabs.applications")}
             <span className="font-mono text-xs text-faint-foreground tabular-nums">
@@ -184,6 +186,9 @@ function ProfileBody({
         </TabsContent>
         <TabsContent value="resume">
           <ResumeViewer profile={profile} />
+        </TabsContent>
+        <TabsContent value="emails">
+          <CandidateEmails profile={profile} />
         </TabsContent>
         <TabsContent value="applications">
           <OtherApplications profile={profile} />
@@ -447,6 +452,7 @@ function EventItem({
     to?: Stage
     job_title?: string
     interviewers?: string[]
+    subject?: string
   }
   const actor = event.actor_name || t("audit.system")
   const otherJob = event.entity_id !== String(profile.id)
@@ -469,7 +475,10 @@ function EventItem({
                 }),
           ]
         : event.type === "email.sent"
-          ? [MailIcon, t("profile.events.emailed", { actor })]
+          ? [
+              MailIcon,
+              t("profile.events.emailed", { actor, subject: payload.subject }),
+            ]
           : [
               UsersIcon,
               t("profile.events.assigned", {

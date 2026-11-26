@@ -10,7 +10,7 @@ Toda la IA corre en tu propia máquina. Sin API keys, sin cuentas externas, sin 
 
 [Read in English](README.md)
 
-> **Estado:** en desarrollo, Fase 2 (ATS núcleo). Las funciones de abajo son el roadmap. Cada una se marca al quedar lista.
+> **Estado:** en desarrollo, Fase 3 (screening explicable). Las funciones de abajo son el roadmap. Cada una se marca al quedar lista.
 
 ## Por qué
 
@@ -64,7 +64,7 @@ Detalles en [docs/architecture.md](docs/architecture.md) (en inglés).
 ## Roadmap
 
 - [x] **Fase 1, Cimientos:** stack Docker sin configuración, CI, multi-empresa con row-level security, autenticación, roles e invitaciones, dirección de diseño
-- [ ] **Fase 2, ATS núcleo:** vacantes con requisitos y etapas, página pública de empleo, postulaciones, pipeline kanban en tiempo real, perfil del candidato, correos, auditoría
+- [x] **Fase 2, ATS núcleo:** vacantes con requisitos y etapas, página pública de empleo, postulaciones, pipeline kanban en tiempo real, perfil del candidato, correos, auditoría
 - [ ] **Fase 3, Screening explicable:** parsing de CV, ocultación de datos personales, matching por requisito con evidencia, correcciones del reclutador, revisión ciega
 - [ ] **Fase 4, Preselección asíncrona:** preguntas por vacante respondidas en texto, audio o video, grabador en el navegador, subida resumible, transcripción, búsqueda y clips
 - [ ] **Fase 5, Decisión y producto:** agenda de entrevistas, scorecards calibrados, vista Terna, analytics, portal del candidato, solicitudes de privacidad, datos demo

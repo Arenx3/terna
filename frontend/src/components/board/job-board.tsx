@@ -11,6 +11,7 @@ import {
 } from "@dnd-kit/core"
 import { CheckIcon, DownloadIcon, EllipsisVerticalIcon } from "lucide-react"
 import { useId, useState, type ReactNode } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 
@@ -21,7 +22,10 @@ import {
   type RejectionReason,
 } from "@/api/applications"
 import type { Stage } from "@/api/jobs"
+import { emailDraft } from "@/api/messaging"
+import { ChoiceSelect } from "@/components/choice-select"
 import { useStageLabel } from "@/components/jobs/stages-editor"
+import { scheduledFor, type When } from "@/components/profile/candidate-emails"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -41,16 +45,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { initials, relativeTime } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 export type BoardStage = Stage & { id: number }
+export type RejectionEmail = {
+  subject: string
+  body: string
+  scheduled_for: string | null
+}
 export type MoveRequest = {
   application: JobApplication
   stage: BoardStage
   reason?: RejectionReason
   note?: string
+  /** The rejection email to queue once the move is saved. */
+  email?: RejectionEmail | null
 }
 
 /**
@@ -138,8 +150,8 @@ export function JobBoard({
       <RejectDialog
         request={rejecting}
         onCancel={() => setRejecting(null)}
-        onConfirm={(reason, note) => {
-          if (rejecting) onMove({ ...rejecting, reason, note })
+        onConfirm={(reason, note, email) => {
+          if (rejecting) onMove({ ...rejecting, reason, note, email })
           setRejecting(null)
         }}
       />
@@ -371,14 +383,12 @@ function RejectDialog({
 }: {
   request: MoveRequest | null
   onCancel: () => void
-  onConfirm: (reason: RejectionReason, note: string) => void
+  onConfirm: (
+    reason: RejectionReason,
+    note: string,
+    email: RejectionEmail | null
+  ) => void
 }) {
-  const { t } = useTranslation()
-  const [reason, setReason] = useState<RejectionReason>("requirements")
-  const [note, setNote] = useState("")
-  const noteId = useId()
-  const name = request?.application.candidate.full_name ?? ""
-
   return (
     <AlertDialog
       open={request !== null}
@@ -386,66 +396,194 @@ function RejectDialog({
         if (!open) onCancel()
       }}
     >
-      <AlertDialogContent>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault()
-            onConfirm(reason, note.trim())
-            setNote("")
-          }}
-          className="flex flex-col gap-4"
-        >
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("board.reject.title", { name })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("board.reject.description")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium">
-              {t("board.reject.reason")}
-            </legend>
-            {REJECTION_REASONS.map((value) => (
-              <label key={value} className="flex items-center gap-2.5 text-sm">
-                <input
-                  type="radio"
-                  name="reason"
-                  value={value}
-                  checked={reason === value}
-                  onChange={() => setReason(value)}
-                  className="size-4 accent-[var(--primary-edge)]"
-                />
-                {t(`board.reasons.${value}`)}
-              </label>
-            ))}
-          </fieldset>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={noteId} className="text-sm font-medium">
-              {t("board.reject.note")}{" "}
-              <span className="font-normal text-faint-foreground">
-                {t("board.reject.optional")}
-              </span>
-            </label>
-            <Textarea
-              id={noteId}
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              rows={3}
-              maxLength={1000}
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel type="button">
-              {t("board.reject.cancel")}
-            </AlertDialogCancel>
-            <Button type="submit" variant="destructive">
-              {t("board.reject.confirm")}
-            </Button>
-          </AlertDialogFooter>
-        </form>
+      <AlertDialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg">
+        {request ? (
+          <RejectForm
+            key={request.application.id}
+            request={request}
+            onConfirm={onConfirm}
+          />
+        ) : null}
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+function RejectForm({
+  request,
+  onConfirm,
+}: {
+  request: MoveRequest
+  onConfirm: (
+    reason: RejectionReason,
+    note: string,
+    email: RejectionEmail | null
+  ) => void
+}) {
+  const { t } = useTranslation()
+  const [reason, setReason] = useState<RejectionReason>("requirements")
+  const [note, setNote] = useState("")
+  const [withEmail, setWithEmail] = useState(true)
+  // Read late at night a rejection lands harder: by default it goes out tomorrow morning.
+  const [when, setWhen] = useState<When>("tomorrow")
+  const [subject, setSubject] = useState("")
+  const [body, setBody] = useState("")
+  const ids = {
+    note: useId(),
+    email: useId(),
+    when: useId(),
+    subject: useId(),
+    body: useId(),
+  }
+  const name = request.application.candidate.full_name
+
+  const draft = useQuery({
+    queryKey: ["email-draft", request.application.id, "rejection"],
+    queryFn: () => emailDraft(request.application.id, "rejection"),
+    staleTime: 0,
+    gcTime: 0,
+  })
+  // Start from the template once it arrives (adjusting state while rendering).
+  const [loaded, setLoaded] = useState(false)
+  if (draft.data && !loaded) {
+    setLoaded(true)
+    setSubject(draft.data.subject)
+    setBody(draft.data.body)
+  }
+
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        const email =
+          withEmail && subject.trim() && body.trim()
+            ? {
+                subject: subject.trim(),
+                body: body.trim(),
+                scheduled_for: scheduledFor(when),
+              }
+            : null
+        onConfirm(reason, note.trim(), email)
+      }}
+      className="flex flex-col gap-4"
+    >
+      <AlertDialogHeader>
+        <AlertDialogTitle>{t("board.reject.title", { name })}</AlertDialogTitle>
+        <AlertDialogDescription>
+          {t("board.reject.description")}
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-sm font-medium">
+          {t("board.reject.reason")}
+        </legend>
+        {REJECTION_REASONS.map((value) => (
+          <label key={value} className="flex items-center gap-2.5 text-sm">
+            <input
+              type="radio"
+              name="reason"
+              value={value}
+              checked={reason === value}
+              onChange={() => setReason(value)}
+              className="size-4 accent-[var(--primary-edge)]"
+            />
+            {t(`board.reasons.${value}`)}
+          </label>
+        ))}
+      </fieldset>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={ids.note} className="text-sm font-medium">
+          {t("board.reject.note")}{" "}
+          <span className="font-normal text-faint-foreground">
+            {t("board.reject.optional")}
+          </span>
+        </label>
+        <Textarea
+          id={ids.note}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          rows={2}
+          maxLength={1000}
+        />
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-lg border p-3">
+        <label htmlFor={ids.email} className="flex items-start gap-2.5 text-sm">
+          <input
+            id={ids.email}
+            type="checkbox"
+            checked={withEmail}
+            onChange={(event) => setWithEmail(event.target.checked)}
+            className="mt-0.5 size-4 accent-[var(--primary-edge)]"
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className="font-medium">{t("emails.rejectEmail")}</span>
+            <span className="text-xs text-muted-foreground">
+              {t("emails.rejectEmailHint")}
+            </span>
+          </span>
+        </label>
+        {withEmail ? (
+          draft.isPending ? (
+            <p role="status" className="text-xs text-muted-foreground">
+              {t("emails.loadingDraft")}
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor={ids.when} className="text-xs font-medium">
+                  {t("emails.when")}
+                </label>
+                <ChoiceSelect
+                  id={ids.when}
+                  value={when}
+                  onChange={setWhen}
+                  choices={(["now", "tomorrow", "inThreeDays"] as const).map(
+                    (value) => ({ value, label: t(`emails.${value}`) })
+                  )}
+                />
+              </div>
+              <details className="text-sm">
+                <summary className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground">
+                  {subject}
+                </summary>
+                <div className="mt-2 flex flex-col gap-2">
+                  <label htmlFor={ids.subject} className="sr-only">
+                    {t("emails.subject")}
+                  </label>
+                  <Input
+                    id={ids.subject}
+                    value={subject}
+                    onChange={(event) => setSubject(event.target.value)}
+                    maxLength={200}
+                  />
+                  <label htmlFor={ids.body} className="sr-only">
+                    {t("emails.body")}
+                  </label>
+                  <Textarea
+                    id={ids.body}
+                    lang={draft.data?.language}
+                    value={body}
+                    onChange={(event) => setBody(event.target.value)}
+                    rows={8}
+                    maxLength={5000}
+                    className="text-[13px] leading-relaxed"
+                  />
+                </div>
+              </details>
+            </div>
+          )
+        ) : null}
+      </div>
+
+      <AlertDialogFooter>
+        <AlertDialogCancel type="button">
+          {t("board.reject.cancel")}
+        </AlertDialogCancel>
+        <Button type="submit" variant="destructive">
+          {t("board.reject.confirm")}
+        </Button>
+      </AlertDialogFooter>
+    </form>
   )
 }

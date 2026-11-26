@@ -18,10 +18,11 @@ from django.db import IntegrityError, transaction
 from accounts.models import normalize_email
 from candidates import storage
 from candidates.models import Application, Candidate, ConsentRecord, Resume
-from candidates.tasks import send_application_received
 from events.models import EventType
 from events.outbox import emit
 from jobs.models import Job
+from messaging import sending
+from messaging.models import TemplateKind
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +154,8 @@ def apply(job: Job, applicant: Applicant, ticket: str) -> tuple[Application, boo
                 # Candidates have no account: the event names them, without a user id.
                 actor=SimpleNamespace(id=None, full_name=candidate.full_name),
             )
+            # The confirmation, in the company's own words and the candidate's language.
+            sending.queue_from_template(application, TemplateKind.APPLICATION_RECEIVED)
     except IntegrityError:
         # The same person submitted twice at the same moment: keep the first.
         storage.discard(final_key)
@@ -161,6 +164,4 @@ def apply(job: Job, applicant: Applicant, ticket: str) -> tuple[Application, boo
         storage.discard(final_key)
         raise
 
-    company_id, application_id = str(job.company_id), application.id
-    transaction.on_commit(lambda: send_application_received.delay(company_id, application_id))
     return application, True

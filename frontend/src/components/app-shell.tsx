@@ -1,6 +1,7 @@
 import {
   BriefcaseBusinessIcon,
   HouseIcon,
+  MailIcon,
   ScrollTextIcon,
   SearchIcon,
   UsersIcon,
@@ -135,6 +136,13 @@ export function AppShell() {
                     to="/settings/pipeline"
                     icon={WorkflowIcon}
                     label={t("nav.pipeline")}
+                  />
+                ) : null}
+                {canSeeJobs ? (
+                  <NavItem
+                    to="/settings/emails"
+                    icon={MailIcon}
+                    label={t("nav.emails")}
                   />
                 ) : null}
                 {isAdmin ? (

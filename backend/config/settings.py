@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "jobs",
     "events",
     "candidates",
+    "messaging",
     "demo",
 ]
 
@@ -132,7 +133,8 @@ REST_FRAMEWORK = {
         "signup": env("AUTH_SIGNUP_RATE", "5/hour"),
         "login": "20/min",
         "login_email": "5/min",
-        "refresh": "60/min",
+        # Every page load restores the session; overridable for fast end-to-end runs.
+        "refresh": env("AUTH_REFRESH_RATE", "60/min"),
         "verify_email": "30/hour",
         "resend_verification": "10/hour",
         "resend_verification_email": "3/hour",
@@ -207,6 +209,8 @@ SPECTACULAR_SETTINGS = {
         "EventTypeEnum": "events.models.EventType",
         "SalaryPeriodEnum": "jobs.models.Job.SalaryPeriod",
         "RejectionReasonEnum": "candidates.models.Application.RejectionReason",
+        "TemplateKindEnum": "messaging.models.TemplateKind",
+        "EmailStatusEnum": "messaging.models.EmailMessage.Status",
     },
 }
 

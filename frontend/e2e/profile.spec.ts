@@ -67,8 +67,12 @@ test("the team opens a candidate, assigns an interviewer and talks about them", 
   ).toBeVisible()
 
   await panel.getByRole("button", { name: "Assign interviewers" }).click()
-  await page.getByRole("menuitemcheckbox", { name: "Diego Ramos" }).click()
+  const diego = page.getByRole("menuitemcheckbox", { name: "Diego Ramos" })
+  await diego.click()
+  // Saved and reloaded: the item turns checked only once the profile says so.
+  await expect(diego).toBeChecked()
   await page.keyboard.press("Escape")
+  await expect(diego).toBeHidden()
   await expect(panel.getByText("Diego Ramos", { exact: true })).toBeVisible()
 
   // A comment that mentions Diego, chosen from the suggestions with the keyboard.
@@ -76,6 +80,8 @@ test("the team opens a candidate, assigns an interviewer and talks about them", 
   await box.pressSequentially("Strong on Spark. @Die")
   await expect(page.getByRole("option", { name: /Diego Ramos/ })).toBeVisible()
   await box.press("Enter")
+  // The suggestion went in as a full name, ready to keep typing.
+  await expect(box).toHaveValue("Strong on Spark. @Diego Ramos ")
   await box.pressSequentially("can you take the technical interview?")
   await panel.getByRole("button", { name: "Comment", exact: true }).click()
   await expect(

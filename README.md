@@ -10,7 +10,7 @@ All AI runs on your own machine. No API keys, no external accounts, no cost.
 
 [Leer en español](README.es.md)
 
-> **Status:** in development, Phase 2 (core ATS). The features below are the roadmap. Each one is checked off as it ships.
+> **Status:** in development, Phase 3 (explainable screening). The features below are the roadmap. Each one is checked off as it ships.
 
 ## Why
 
@@ -64,7 +64,7 @@ Details in [docs/architecture.md](docs/architecture.md).
 ## Roadmap
 
 - [x] **Phase 1, Foundations:** zero-config Docker stack, CI, multi-tenancy with row-level security, auth, roles and invitations, design direction
-- [ ] **Phase 2, Core ATS:** jobs with requirements and stages, public careers page, applications, real-time kanban pipeline, candidate profile, email, audit log
+- [x] **Phase 2, Core ATS:** jobs with requirements and stages, public careers page, applications, real-time kanban pipeline, candidate profile, email, audit log
 - [ ] **Phase 3, Explainable screening:** résumé parsing, personal data redaction, requirement matching with evidence, recruiter overrides, blind review
 - [ ] **Phase 4, Async screening:** per-job questions answered in text, voice or video, in-browser recorder, resumable uploads, transcription, search and clips
 - [ ] **Phase 5, Decision and product:** interview scheduling, calibrated scorecards, the Terna view, analytics, candidate portal, privacy requests, demo data

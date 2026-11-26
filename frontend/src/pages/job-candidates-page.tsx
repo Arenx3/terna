@@ -15,6 +15,7 @@ import {
   type JobApplication,
 } from "@/api/applications"
 import { currentCompanyQuery } from "@/api/careers"
+import { sendEmail } from "@/api/messaging"
 import { ApiError, errorMessage } from "@/api/errors"
 import { jobQuery } from "@/api/jobs"
 import { useRole } from "@/auth/roles"
@@ -139,10 +140,17 @@ export function JobCandidatesPage() {
       )
       void queryClient.invalidateQueries({ queryKey: listKey })
     },
-    onSuccess: (saved) =>
+    onSuccess: (saved, { email }) => {
       queryClient.setQueryData(listKey, (list: JobApplication[] | undefined) =>
         upsert(list, saved)
-      ),
+      )
+      // The rejection email goes out through the outbox, after the move is saved.
+      if (email) {
+        void sendEmail(saved.id, { kind: "rejection", ...email }).catch(() =>
+          setFailure(t("emails.sendFailed"))
+        )
+      }
+    },
   })
 
   const back = (

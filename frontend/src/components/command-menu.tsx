@@ -1,6 +1,7 @@
 import {
   BriefcaseBusinessIcon,
   HouseIcon,
+  MailIcon,
   LanguagesIcon,
   LogOutIcon,
   MonitorIcon,
@@ -104,6 +105,14 @@ export function CommandMenu({
               >
                 <WorkflowIcon aria-hidden="true" />
                 <Label>{t("nav.pipeline")}</Label>
+              </CommandItem>
+            ) : null}
+            {canSeeJobs ? (
+              <CommandItem
+                onSelect={() => run(() => navigate("/settings/emails"))}
+              >
+                <MailIcon aria-hidden="true" />
+                <Label>{t("nav.emails")}</Label>
               </CommandItem>
             ) : null}
             {isAdmin ? (

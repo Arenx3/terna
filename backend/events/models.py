@@ -25,7 +25,9 @@ class EventType(models.TextChoices):
     APPLICATION_ASSIGNED = "application.assigned", _("Interviewers assigned")
     CANDIDATE_VIEWED = "candidate.viewed", _("Candidate profile viewed")
     COMMENT_CREATED = "comment.created", _("Comment added")
+    EMAIL_QUEUED = "email.queued", _("Email written to a candidate")
     EMAIL_SENT = "email.sent", _("Email sent to a candidate")
+    EMAIL_FAILED = "email.failed", _("Email to a candidate failed")
 
 
 class EventFields(models.Model):
