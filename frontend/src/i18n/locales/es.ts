@@ -219,6 +219,7 @@ export const es: Resources = {
     },
   },
   errors: {
+    resume_reading: "Ya estamos leyendo este CV. Espera unos segundos.",
     stage_changed:
       "Alguien más movió a este candidato. El tablero ya está al día.",
     form_expired:
@@ -672,6 +673,48 @@ export const es: Resources = {
         "Los archivos de Word no se pueden previsualizar aquí. Descárgalo para leerlo.",
       loadError: "No pudimos abrir el CV. Intenta descargarlo.",
       none: "No hay CV en el expediente.",
+      view: "Vista del CV",
+      textView: "Texto",
+      documentView: "Documento",
+      text: {
+        summary: "{{passages}} · {{pages}}",
+        pages_one: "{{count}} página",
+        pages_other: "{{count}} páginas",
+        passages_one: "{{count}} pasaje leído",
+        passages_other: "{{count}} pasajes leídos",
+        explainer:
+          "Así lee Terna este CV. El screening cita estas líneas como evidencia.",
+        reading: "Leyendo el CV…",
+        loadError: "No pudimos cargar el texto del CV.",
+        readAgain: "Volver a leer",
+        retry: "Reintentar",
+        showDocument: "Ver documento",
+        reviewTitle: "Este CV necesita revisión manual",
+        reviewHint: "Ábrelo en la vista de documento o descárgalo para leerlo.",
+        failedTitle: "No pudimos leer el CV",
+        failedHint:
+          "Puedes reintentar; si vuelve a fallar, descárgalo para leerlo.",
+        page: "p. {{page}}",
+        pageRange: "pp. {{from}}–{{to}}",
+        reason: {
+          no_text:
+            "El archivo no tiene texto que leer: puede ser una imagen o un documento escaneado.",
+          encrypted: "El archivo está protegido con contraseña.",
+          unreadable: "El archivo está dañado o no es un PDF o Word válido.",
+          storage: "El almacenamiento de archivos no respondió.",
+          error: "Algo falló al leerlo.",
+        },
+        section: {
+          header: "Encabezado",
+          summary: "Perfil",
+          experience: "Experiencia",
+          education: "Educación",
+          skills: "Habilidades",
+          languages: "Idiomas",
+          certifications: "Certificaciones",
+          other: "Otros",
+        },
+      },
     },
     otherApplications: "También se postuló a",
     noOtherApplications: "No tiene otras postulaciones en esta empresa.",

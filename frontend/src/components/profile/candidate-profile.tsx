@@ -32,6 +32,7 @@ import { useRole } from "@/auth/roles"
 import { useSession } from "@/auth/session"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { CandidateEmails } from "@/components/profile/candidate-emails"
+import { ResumeTextView } from "@/components/profile/resume-text"
 import { useStageLabel } from "@/components/jobs/stages-editor"
 import {
   mentionedIn,
@@ -48,6 +49,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { initials, relativeTime, shortDate } from "@/lib/format"
 
 type Stage = { name: string; kind: StageKind }
@@ -503,16 +505,87 @@ function EventItem({
   )
 }
 
-/** The résumé, shown in the browser when it's a PDF. The file comes straight from storage. */
+const RESUME_VIEWS = ["text", "document"] as const
+type ResumeView = (typeof RESUME_VIEWS)[number]
+
+/** The résumé: the text the screening read from it, or the original file. */
 function ResumeViewer({ profile }: { profile: Profile }) {
+  const { t } = useTranslation()
+  const [view, setView] = useState<ResumeView>("text")
+  const resume = profile.resume
+
+  async function download() {
+    window.location.assign(await resumeUrl(profile.id, false))
+  }
+
+  if (!resume) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t("profile.resume.none")}
+      </p>
+    )
+  }
+  const isPdf = resume.format === "pdf"
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <ToggleGroup
+          value={[view]}
+          onValueChange={(next) => {
+            const chosen = next[0] as ResumeView | undefined
+            if (chosen) setView(chosen)
+          }}
+          aria-label={t("profile.resume.view")}
+          variant="outline"
+          size="sm"
+          spacing={0}
+        >
+          {RESUME_VIEWS.map((option) => (
+            <ToggleGroupItem
+              key={option}
+              value={option}
+              className="h-8 px-2.5 text-xs text-muted-foreground data-pressed:bg-secondary data-pressed:text-foreground"
+            >
+              {option === "text"
+                ? t("profile.resume.textView")
+                : t("profile.resume.documentView")}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="truncate text-sm text-muted-foreground">
+            {resume.filename}
+          </span>
+          <Button variant="outline" size="sm" onClick={() => void download()}>
+            <DownloadIcon data-icon="inline-start" aria-hidden="true" />
+            {t("profile.resume.download")}
+          </Button>
+        </div>
+      </div>
+      {view === "text" ? (
+        <ResumeTextView
+          applicationId={profile.id}
+          canManage={profile.can_manage}
+          onShowDocument={isPdf ? () => setView("document") : undefined}
+        />
+      ) : isPdf ? (
+        <PdfPreview profile={profile} />
+      ) : (
+        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+          {t("profile.resume.wordNoPreview")}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** The PDF in the browser's own viewer. The file comes straight from storage. */
+function PdfPreview({ profile }: { profile: Profile }) {
   const { t } = useTranslation()
   const [src, setSrc] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
-  const resume = profile.resume
-  const isPdf = resume?.format === "pdf"
 
   useEffect(() => {
-    if (!isPdf) return
     let objectUrl: string | null = null
     let cancelled = false
     // A blob URL is same-origin, so the browser's PDF viewer can frame it.
@@ -534,50 +607,23 @@ function ResumeViewer({ profile }: { profile: Profile }) {
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [profile.id, isPdf])
+  }, [profile.id])
 
-  async function download() {
-    window.location.assign(await resumeUrl(profile.id, false))
-  }
-
-  if (!resume) {
+  if (failed) {
     return (
-      <p className="text-sm text-muted-foreground">
-        {t("profile.resume.none")}
+      <p role="alert" className="text-sm text-destructive">
+        {t("profile.resume.loadError")}
       </p>
     )
   }
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <span className="truncate text-sm text-muted-foreground">
-          {resume.filename}
-        </span>
-        <Button variant="outline" size="sm" onClick={() => void download()}>
-          <DownloadIcon data-icon="inline-start" aria-hidden="true" />
-          {t("profile.resume.download")}
-        </Button>
-      </div>
-      {!isPdf ? (
-        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-          {t("profile.resume.wordNoPreview")}
-        </p>
-      ) : failed ? (
-        <p role="alert" className="text-sm text-destructive">
-          {t("profile.resume.loadError")}
-        </p>
-      ) : src ? (
-        <iframe
-          src={src}
-          title={t("profile.resume.title", {
-            name: profile.candidate.full_name,
-          })}
-          className="h-[70vh] w-full rounded-lg border bg-white"
-        />
-      ) : (
-        <Skeleton className="h-[70vh] w-full" />
-      )}
-    </div>
+  return src ? (
+    <iframe
+      src={src}
+      title={t("profile.resume.title", { name: profile.candidate.full_name })}
+      className="h-[70vh] w-full rounded-lg border bg-white"
+    />
+  ) : (
+    <Skeleton className="h-[70vh] w-full" />
   )
 }
 

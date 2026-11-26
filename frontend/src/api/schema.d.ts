@@ -153,6 +153,44 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/applications/{id}/resume/reprocess/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    post: operations["applications_resume_reprocess_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/applications/{id}/resume/text/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description The passages read from the résumé, from the database: the file itself isn't touched. */
+    get: operations["applications_resume_text_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/applications/{id}/timeline/": {
     parameters: {
       query?: never
@@ -1146,6 +1184,26 @@ export interface components {
       | "email.sent"
       | "email.failed"
     /**
+     * @description * `no_text` - The file has no text to read, like a scanned page
+     *     * `encrypted` - The file is password protected
+     *     * `unreadable` - The file is damaged or not a valid document
+     *     * `storage` - The file couldn't be read from storage
+     *     * `error` - Unexpected error
+     * @enum {string}
+     */
+    ExtractionReasonEnum:
+      "no_text" | "encrypted" | "unreadable" | "storage" | "error"
+    /**
+     * @description * `pending` - Pending
+     *     * `processing` - Processing
+     *     * `ready` - Ready
+     *     * `needs_review` - Needs review
+     *     * `failed` - Failed
+     * @enum {string}
+     */
+    ExtractionStatusEnum:
+      "pending" | "processing" | "ready" | "needs_review" | "failed"
+    /**
      * @description * `pdf` - PDF
      *     * `docx` - DOCX
      * @enum {string}
@@ -1380,6 +1438,14 @@ export interface components {
        */
       readonly created_at: string
     }
+    Passage: {
+      readonly id: number
+      readonly page: number
+      readonly position: number
+      readonly section: components["schemas"]["SectionEnum"]
+      readonly text: string
+      readonly periods: components["schemas"]["Period"][]
+    }
     PasswordResetConfirmRequest: {
       uid: string
       token: string
@@ -1410,6 +1476,12 @@ export interface components {
     }
     PatchedRoleRequest: {
       role?: components["schemas"]["RoleEnum"]
+    }
+    Period: {
+      text: string
+      start: string
+      end: string | null
+      ongoing: boolean
     }
     Person: {
       /** Format: uuid */
@@ -1568,6 +1640,17 @@ export interface components {
       /** Format: uri */
       url: string
     }
+    ResumeText: {
+      status: components["schemas"]["ExtractionStatusEnum"]
+      reason:
+        | components["schemas"]["ExtractionReasonEnum"]
+        | components["schemas"]["BlankEnum"]
+      detail: string
+      pages: number
+      /** Format: date-time */
+      extracted_at: string | null
+      passages: components["schemas"]["Passage"][]
+    }
     /**
      * @description * `admin` - Admin
      *     * `recruiter` - Recruiter
@@ -1588,6 +1671,26 @@ export interface components {
      * @enum {string}
      */
     SalaryPeriodEnum: "month" | "year"
+    /**
+     * @description * `header` - Header
+     *     * `summary` - Summary
+     *     * `experience` - Experience
+     *     * `education` - Education
+     *     * `skills` - Skills
+     *     * `languages` - Languages
+     *     * `certifications` - Certifications
+     *     * `other` - Other
+     * @enum {string}
+     */
+    SectionEnum:
+      | "header"
+      | "summary"
+      | "experience"
+      | "education"
+      | "skills"
+      | "languages"
+      | "certifications"
+      | "other"
     /** @description What the app needs after login or refresh: who, and in which company. */
     Session: {
       access: string
@@ -1947,6 +2050,48 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["ResumeLink"]
+        }
+      }
+    }
+  }
+  applications_resume_reprocess_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ResumeText"]
+        }
+      }
+    }
+  }
+  applications_resume_text_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ResumeText"]
         }
       }
     }
