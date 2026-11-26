@@ -82,14 +82,81 @@ export async function careersPathOf(page: Page) {
   return new URL(href ?? "", "http://x").pathname
 }
 
-export const RESUME_PDF = Buffer.from(
-  [
-    "%PDF-1.4",
-    "1 0 obj << /Type /Catalog >> endobj",
-    "trailer << /Root 1 0 R >>",
+// WinAnsi (cp1252) for the few typographic characters outside Latin-1.
+const WIN_ANSI: Record<string, number> = { "•": 0x95, "–": 0x96, "—": 0x97 }
+const winAnsi = (text: string) =>
+  Buffer.from(
+    Array.from(
+      text,
+      (c) => WIN_ANSI[c] ?? (c.charCodeAt(0) < 256 ? c.charCodeAt(0) : 63)
+    )
+  )
+
+/** A one-page PDF with real text (Helvetica, WinAnsi), so the résumé parser has something to read. */
+export function textPdf(lines: string[]): Buffer {
+  const escape = (text: string) => text.replace(/[()\\]/g, (c) => `\\${c}`)
+  const content = [
+    "BT",
+    "/F1 11 Tf",
+    "56 780 Td",
+    ...lines.flatMap((line, i) => [
+      ...(i ? ["0 -18 Td"] : []),
+      `(${escape(line)}) Tj`,
+    ]),
+    "ET",
+  ].join("\n")
+  const stream = winAnsi(content)
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] " +
+      "/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+  ].map((body) => Buffer.from(body))
+  objects.push(
+    Buffer.concat([
+      Buffer.from(`<< /Length ${stream.length} >>\nstream\n`),
+      stream,
+      Buffer.from("\nendstream"),
+    ])
+  )
+  const parts: Buffer[] = [Buffer.from("%PDF-1.4\n")]
+  let size = parts[0].length
+  const offsets: number[] = []
+  objects.forEach((body, index) => {
+    offsets.push(size)
+    const object = Buffer.concat([
+      Buffer.from(`${index + 1} 0 obj\n`),
+      body,
+      Buffer.from("\nendobj\n"),
+    ])
+    parts.push(object)
+    size += object.length
+  })
+  const xref = [
+    "xref",
+    `0 ${objects.length + 1}`,
+    "0000000000 65535 f ",
+    ...offsets.map((offset) => `${String(offset).padStart(10, "0")} 00000 n `),
+    "trailer",
+    `<< /Size ${objects.length + 1} /Root 1 0 R >>`,
+    "startxref",
+    String(size),
     "%%EOF",
-  ].join(String.fromCharCode(10))
-)
+    "",
+  ].join("\n")
+  return Buffer.concat([...parts, Buffer.from(xref)])
+}
+
+export const RESUME_PDF = textPdf([
+  "Lucía Torres",
+  "Data engineer · Ciudad de México · lucia.torres@example.com",
+  "Experience",
+  "Data Engineer, Acme (Jan 2020 – Present)",
+  "• Ingestion pipelines in Python and Airflow.",
+  "Languages",
+  "Spanish (native), English (C1)",
+])
 
 /** Apply to a job as an anonymous visitor, in a browser of their own. */
 export async function applyAs(

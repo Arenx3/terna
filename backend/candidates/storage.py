@@ -81,6 +81,14 @@ def inspect(key: str) -> tuple[int, str]:
     raise InvalidResumeError("wrong_type")
 
 
+def read(key: str) -> bytes:
+    """The whole file. Only workers call this; API requests never download a résumé."""
+    response = s3_client().get_object(Bucket=settings.STORAGE_BUCKET, Key=key)
+    if response["ContentLength"] > MAX_RESUME_BYTES:
+        raise InvalidResumeError("too_large")
+    return response["Body"].read(MAX_RESUME_BYTES + 1)
+
+
 def promote(key: str, company_id, extension: str) -> str:
     """Move an accepted upload out of the incoming area, inside storage."""
     final_key = f"resumes/{company_id}/{uuid.uuid4()}.{extension}"

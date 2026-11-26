@@ -14,6 +14,8 @@ dependencies = [
     "drf-spectacular>=0.28,<1",
     "drf-spectacular-sidecar>=2025.1",
     "psycopg[binary]>=3.2,<4",
+    "pypdf>=6,<7",
+    "python-docx>=1.2,<2",
     "uvicorn[standard]>=0.30",
     "whitenoise>=6.9,<7",
 ]
@@ -47,6 +49,8 @@ select = [
     "UP",  # pyupgrade
     "W",   # pycodestyle warnings
 ]
+# Résumés and their date ranges are written with en dashes ("2019 – 2024").
+allowed-confusables = ["–"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S101", "S105", "S106"]

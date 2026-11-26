@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "events",
     "candidates",
     "messaging",
+    "screening",
     "demo",
 ]
 
@@ -211,6 +212,9 @@ SPECTACULAR_SETTINGS = {
         "RejectionReasonEnum": "candidates.models.Application.RejectionReason",
         "TemplateKindEnum": "messaging.models.TemplateKind",
         "EmailStatusEnum": "messaging.models.EmailMessage.Status",
+        "ExtractionStatusEnum": "screening.models.ResumeExtraction.Status",
+        "ExtractionReasonEnum": "screening.models.ResumeExtraction.Reason",
+        "SectionEnum": "screening.models.Section",
     },
 }
 
@@ -224,6 +228,7 @@ CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_ROUTES = {"screening.tasks.extract_resume": {"queue": "ml"}}
 CELERY_BEAT_SCHEDULER = "core.beat:HeartbeatScheduler"
 CELERY_BEAT_MAX_LOOP_INTERVAL = 30
 CELERY_BEAT_SCHEDULE: dict = {
@@ -233,6 +238,11 @@ CELERY_BEAT_SCHEDULE: dict = {
     "purge-incoming-uploads": {
         "task": "candidates.tasks.purge_incoming_uploads",
         "schedule": 3600.0,
+    },
+    # Résumés that were never read (or whose worker died) are read again.
+    "recover-resume-extractions": {
+        "task": "screening.tasks.recover_resume_extractions",
+        "schedule": 120.0,
     },
 }
 

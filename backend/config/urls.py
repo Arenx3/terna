@@ -9,6 +9,7 @@ from candidates.views import JobApplicationsView, MoveApplicationView
 from core.views import HealthView, liveness
 from events.views import AuditLogView
 from messaging import views as messaging_views
+from screening import views as screening_views
 
 # These never touch tenant data. Outside ATOMIC_REQUESTS they open no transaction,
 # so liveness and readiness keep answering (200 and 503) while the database is down.
@@ -29,6 +30,16 @@ urlpatterns = [
     ),
     path("api/applications/<int:pk>/", profile.ProfileView.as_view(), name="application"),
     path("api/applications/<int:pk>/resume/", profile.ResumeView.as_view(), name="resume-link"),
+    path(
+        "api/applications/<int:pk>/resume/text/",
+        screening_views.ResumeTextView.as_view(),
+        name="resume-text",
+    ),
+    path(
+        "api/applications/<int:pk>/resume/reprocess/",
+        screening_views.ReprocessView.as_view(),
+        name="resume-reprocess",
+    ),
     path(
         "api/applications/<int:pk>/timeline/",
         profile.TimelineView.as_view(),
