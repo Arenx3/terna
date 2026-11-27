@@ -26,9 +26,16 @@ dev = [
     "pytest-django>=4.10",
     "ruff>=0.17",
 ]
+ml = [
+    "spacy>=3.8,<3.9",
+    "xx-ent-wiki-sm",
+]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+xx-ent-wiki-sm = { url = "https://github.com/explosion/spacy-models/releases/download/xx_ent_wiki_sm-3.8.0/xx_ent_wiki_sm-3.8.0-py3-none-any.whl" }
 
 [tool.ruff]
 target-version = "py313"
@@ -50,7 +57,7 @@ select = [
     "W",   # pycodestyle warnings
 ]
 # Résumés and their date ranges are written with en dashes ("2019 – 2024").
-allowed-confusables = ["–"]
+allowed-confusables = ["–", "’"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S101", "S105", "S106"]

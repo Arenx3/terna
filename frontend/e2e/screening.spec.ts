@@ -38,6 +38,16 @@ test("a new résumé is read into sections the team can check", async ({
   await expect(panel.getByText("5 passages read · 1 page")).toBeVisible()
   await expectNoAccessibilityViolations(page)
 
+  // What the AI reads: the same text, with the personal data hidden.
+  const header = panel.getByRole("region", { name: "Header" })
+  await expect(header.getByText("Lucía Torres")).toBeVisible()
+  await panel.getByRole("button", { name: "What the AI sees" }).click()
+  await expect(panel.getByText(/with 3 personal details hidden/)).toBeVisible()
+  await expect(header.getByText("Lucía Torres")).toHaveCount(0)
+  await expect(header.getByText("name", { exact: true })).toBeVisible()
+  await expect(experience.getByText("Jan 2020 – Present")).toBeVisible()
+  await expectNoAccessibilityViolations(page)
+
   // The original file is one click away.
   await panel.getByRole("button", { name: "Document" }).click()
   await expect(panel.getByRole("button", { name: "Document" })).toHaveAttribute(

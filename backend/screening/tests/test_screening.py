@@ -231,3 +231,50 @@ def test_deleting_the_candidate_deletes_the_text(acme, apply, deliver):
         Resume.objects.get().candidate.delete()
         assert not ResumePassage.objects.exists()
         assert not ResumeExtraction.objects.exists()
+
+
+def test_the_ai_only_ever_reads_the_redacted_text(acme, apply, deliver):
+    application = apply()
+    deliver()
+
+    text = acme.client("recruiter").get(text_url(application)).json()
+    assert text["language"] == "es"
+    assert [p["redacted"] for p in text["passages"][:2]] == [
+        "[NOMBRE]",
+        "Ingeniera de datos · [UBICACIÓN] · [CORREO]",
+    ]
+    assert text["passages"][1]["redactions"] == [
+        {"kind": "location", "start": 21, "end": 37},
+        {"kind": "email", "start": 40, "end": 64},
+    ]
+    with tenant_context(acme.company.id):
+        analysis = analysis_text(extraction(acme).resume_id)
+    assert "Lucía" not in analysis
+    assert "lucia.torres@example.com" not in analysis
+    assert "Pipelines de ingesta en Python y Airflow." in analysis
+
+
+def analysis_text(resume_id) -> str:
+    from screening.analysis import passages_for_analysis
+
+    return "\n".join(text for _, text in passages_for_analysis(resume_id))
+
+
+def test_resumes_redacted_by_older_rules_are_redacted_again(
+    acme, apply, deliver, django_capture_on_commit_callbacks
+):
+    apply()
+    deliver()
+    with tenant_context(acme.company.id):
+        ResumeExtraction.objects.update(redaction_version=0)
+        ResumePassage.objects.update(redacted="Lucía Torres")
+        # Until then, nothing reaches the AI.
+        assert analysis_text(extraction(acme).resume_id) == ""
+
+    with django_capture_on_commit_callbacks(execute=True):
+        assert tasks.recover_resume_extractions() == 1
+
+    row = extraction(acme)
+    assert (row.status, row.redaction_version) == ("ready", tasks.redaction.VERSION)
+    with tenant_context(acme.company.id):
+        assert "Lucía" not in analysis_text(row.resume_id)

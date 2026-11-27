@@ -16,7 +16,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from candidates import storage
-from screening import services
+from screening import redaction, services
 from screening.extraction import ExtractionError, extract
 from screening.models import ResumeExtraction, ResumePassage
 from tenancy.context import all_company_ids, tenant_context
@@ -31,11 +31,11 @@ STORAGE_RETRIES = 3
 NEEDS_A_PERSON = (Reason.NO_TEXT, Reason.ENCRYPTED)
 
 
-def _claim(company_id: str, resume_id: str) -> tuple[int, str, str] | None:
+def _claim(company_id: str, resume_id: str) -> tuple[int, str, str, str] | None:
     with tenant_context(company_id):
         row = (
             ResumeExtraction.objects.select_for_update()
-            .select_related("resume")
+            .select_related("resume__candidate")
             .filter(resume_id=resume_id)
             .first()
         )
@@ -52,7 +52,8 @@ def _claim(company_id: str, resume_id: str) -> tuple[int, str, str] | None:
         row.attempts += 1
         row.started_at = timezone.now()
         row.save(update_fields=["status", "attempts", "started_at", "updated_at"])
-        return row.attempts, row.resume.storage_key, row.resume.format
+        resume = row.resume
+        return row.attempts, resume.storage_key, resume.format, resume.candidate.full_name
 
 
 def _finish(
@@ -65,6 +66,7 @@ def _finish(
     detail: str = "",
     pages: int = 0,
     passages: list[dict] | None = None,
+    language: str = "",
 ) -> bool:
     """Write this run's result, unless a newer run has claimed the résumé since."""
     with tenant_context(company_id):
@@ -81,6 +83,9 @@ def _finish(
         row.reason = reason
         row.detail = detail[:500]
         row.pages = pages
+        row.language = language
+        if status == Status.READY:
+            row.redaction_version = redaction.VERSION
         if status == Status.READY:
             row.extracted_at = timezone.now()
         row.save()
@@ -93,12 +98,14 @@ def extract_resume(company_id: str, resume_id: str, retry: int = 0) -> str:
     claim = _claim(company_id, resume_id)
     if claim is None:
         return "skipped"
-    attempt, key, kind = claim
+    attempt, key, kind, full_name = claim
     finish = partial(_finish, company_id, resume_id, attempt)
 
     try:
         content = storage.read(key)
         result = extract(content, kind)
+        # Before anything else reads them, the passages lose their personal data.
+        language = redaction.redact(result.passages, full_name)
     except ExtractionError as exc:
         status = Status.NEEDS_REVIEW if exc.reason in NEEDS_A_PERSON else Status.FAILED
         finish(status, reason=exc.reason, detail=exc.detail)
@@ -121,7 +128,7 @@ def extract_resume(company_id: str, resume_id: str, retry: int = 0) -> str:
         finish(Status.FAILED, reason=Reason.ERROR, detail=f"{type(exc).__name__}: {exc}")
         return Status.FAILED
 
-    finish(Status.READY, pages=result.pages, passages=result.passages)
+    finish(Status.READY, pages=result.pages, passages=result.passages, language=language)
     return Status.READY
 
 

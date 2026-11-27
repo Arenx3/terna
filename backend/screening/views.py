@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from candidates.access import can_manage
 from candidates.models import Application
 from candidates.profile import ApplicationView
-from screening import services
+from screening import redaction, services
 from screening.models import ResumeExtraction, ResumePassage
 
 
@@ -19,12 +19,28 @@ class PeriodSerializer(serializers.Serializer):
     ongoing = serializers.BooleanField()
 
 
+class RedactionSerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(choices=redaction.KINDS)
+    start = serializers.IntegerField()
+    end = serializers.IntegerField()
+
+
 class PassageSerializer(serializers.ModelSerializer):
     periods = PeriodSerializer(many=True, read_only=True)
+    redactions = RedactionSerializer(many=True, read_only=True)
 
     class Meta:
         model = ResumePassage
-        fields = ("id", "page", "position", "section", "text", "periods")
+        fields = (
+            "id",
+            "page",
+            "position",
+            "section",
+            "text",
+            "periods",
+            "redacted",
+            "redactions",
+        )
         read_only_fields = fields
 
 
@@ -33,6 +49,7 @@ class ResumeTextSerializer(serializers.Serializer):
     reason = serializers.ChoiceField(choices=ResumeExtraction.Reason.choices, allow_blank=True)
     detail = serializers.CharField(allow_blank=True)
     pages = serializers.IntegerField()
+    language = serializers.CharField(allow_blank=True)
     extracted_at = serializers.DateTimeField(allow_null=True)
     passages = PassageSerializer(many=True)
 
@@ -48,6 +65,7 @@ def describe(application: Application) -> dict:
         "reason": extraction.reason,
         "detail": extraction.detail,
         "pages": extraction.pages,
+        "language": extraction.language,
         "extracted_at": extraction.extracted_at,
         "passages": ResumePassage.objects.filter(resume=resume) if ready else [],
     }

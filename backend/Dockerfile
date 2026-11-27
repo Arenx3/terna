@@ -24,9 +24,15 @@ FROM uv AS deps
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
+# Local models (entity recognition now; embeddings and transcription later) only go where
+# they run: the ml worker and the tests.
+FROM uv AS deps-ml
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --group ml --no-install-project
+
 FROM uv AS deps-dev
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project
+    uv sync --frozen --group ml --no-install-project
 
 FROM base AS app
 COPY --from=deps /opt/venv /opt/venv
@@ -53,10 +59,9 @@ COPY --from=deps /opt/venv /opt/venv
 COPY . .
 USER app
 
-# Résumé parsing, embeddings and transcription dependencies arrive with Phase 3.
 FROM base AS ml
 ENV HF_HOME=/models/huggingface
 RUN mkdir -p /models && chown app:app /models
-COPY --from=deps /opt/venv /opt/venv
+COPY --from=deps-ml /opt/venv /opt/venv
 COPY . .
 USER app

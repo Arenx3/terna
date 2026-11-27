@@ -52,6 +52,9 @@ class ResumeExtraction(TenantModel):
     attempts = models.PositiveSmallIntegerField(_("attempts"), default=0)
     started_at = models.DateTimeField(_("started at"), null=True, blank=True)
     extracted_at = models.DateTimeField(_("extracted at"), null=True, blank=True)
+    language = models.CharField(_("language"), max_length=5, blank=True)
+    # Passages redacted by an older version of the rules are redacted again.
+    redaction_version = models.PositiveSmallIntegerField(_("redaction version"), default=0)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
@@ -74,6 +77,10 @@ class ResumePassage(TenantModel):
     text = models.TextField(_("text"), max_length=2000)
     # Date ranges found in the text: [{"text", "start", "end", "ongoing"}].
     periods = models.JSONField(_("periods"), default=list, blank=True)
+    # What the AI reads: personal data replaced by markers ([NOMBRE], [TELÉFONO]).
+    redacted = models.TextField(_("redacted text"), max_length=2000, blank=True)
+    # The spans of `text` that were replaced: [{"kind", "start", "end"}].
+    redactions = models.JSONField(_("redactions"), default=list, blank=True)
 
     class Meta:
         verbose_name = _("résumé passage")

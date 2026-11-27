@@ -684,6 +684,27 @@ export const es: Resources = {
         passages_other: "{{count}} pasajes leídos",
         explainer:
           "Así lee Terna este CV. El screening cita estas líneas como evidencia.",
+        aiView: "Lo que ve la IA",
+        aiExplainer_one:
+          "La IA lee este mismo texto con {{count}} dato personal oculto. Tú sigues viendo el original.",
+        aiExplainer_other:
+          "La IA lee este mismo texto con {{count}} datos personales ocultos. Tú sigues viendo el original.",
+        hidden: {
+          name: "nombre",
+          email: "correo",
+          phone: "teléfono",
+          url: "enlace",
+          curp: "CURP",
+          rfc: "RFC",
+          nss: "NSS",
+          birthdate: "fecha de nacimiento",
+          age: "edad",
+          marital_status: "estado civil",
+          gender: "género",
+          nationality: "nacionalidad",
+          address: "dirección",
+          location: "ubicación",
+        },
         reading: "Leyendo el CV…",
         loadError: "No pudimos cargar el texto del CV.",
         readAgain: "Volver a leer",
