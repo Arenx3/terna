@@ -29,8 +29,8 @@ Each worker consumes its own queue. A long transcription never delays an email o
 
 1. The candidate requests an upload URL, then uploads the résumé straight to storage. The file never passes through Django.
 2. The application is created. An outbox event, `application.submitted`, is written in the same transaction.
-3. `worker-ml` extracts the text, splits it into passages tagged with section and page, and redacts personal data.
-4. It computes an embedding for each passage and matches the passages against each requirement.
+3. `worker-ml` extracts the text, splits it into passages tagged with section and page, and redacts personal data: rules for contact details, IDs (CURP, RFC, NSS), age, birth date, marital status, gender, nationality and address; the candidate's own name in any form; and a small local entity recognizer whose findings are only kept where context confirms them. Each passage keeps its original for the people who can open the profile, plus a redacted copy.
+4. It computes an embedding for each passage and matches the passages against each requirement. Everything that feeds a model reads passages through `screening.analysis`, which only hands out the redacted copy.
 5. The verdicts and their evidence are saved. The kanban board updates live over WebSockets.
 
 ### Async screening answer

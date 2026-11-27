@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from candidates.models import Application, Resume
 from events.models import EventType, OutboxEvent
+from screening import redaction
 from screening.models import ResumeExtraction
 from tenancy.context import require_company_id
 
@@ -71,7 +72,16 @@ def recover() -> int:
         Q(status=ResumeExtraction.Status.PENDING, updated_at__lt=now - RECOVER_AFTER)
         | Q(status=ResumeExtraction.Status.PROCESSING, started_at__lt=now - STALE_AFTER)
     ).values_list("resume_id", flat=True)[:RECOVER_BATCH]
-    scheduled = {*missing, *stuck}
+    # Redacted by older rules: read again, so the AI never sees what they missed.
+    outdated = list(
+        ResumeExtraction.objects.filter(
+            status=ResumeExtraction.Status.READY, redaction_version__lt=redaction.VERSION
+        ).values_list("resume_id", flat=True)[:RECOVER_BATCH]
+    )
+    ResumeExtraction.objects.filter(resume_id__in=outdated).update(
+        status=ResumeExtraction.Status.PENDING, updated_at=now
+    )
+    scheduled = {*missing, *stuck, *outdated}
     for resume_id in scheduled:
         _enqueue(resume_id)
     return len(scheduled)

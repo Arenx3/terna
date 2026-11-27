@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { CircleAlertIcon, FileTextIcon, RotateCwIcon } from "lucide-react"
-import { useId, type ReactNode } from "react"
+import {
+  CircleAlertIcon,
+  FileTextIcon,
+  RotateCwIcon,
+  ScanEyeIcon,
+} from "lucide-react"
+import { useId, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { errorMessage } from "@/api/errors"
@@ -9,6 +14,7 @@ import {
   reprocessResume,
   resumeTextQuery,
   type Passage,
+  type RedactionKind,
   type ResumeText,
   type Section,
 } from "@/api/screening"
@@ -17,6 +23,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { Toggle } from "@/components/ui/toggle"
 
 type Group = { section: Section; passages: Passage[] }
 
@@ -157,7 +164,12 @@ function ReadText({
   actionError: ReactNode
 }) {
   const { t } = useTranslation()
+  const [aiView, setAiView] = useState(false)
   const groups = groupBySection(data.passages)
+  const hidden = data.passages.reduce(
+    (total, passage) => total + passage.redactions.length,
+    0
+  )
   const pages = t("profile.resume.text.pages", { count: data.pages })
   const passages = t("profile.resume.text.passages", {
     count: data.passages.length,
@@ -171,10 +183,24 @@ function ReadText({
             {t("profile.resume.text.summary", { pages, passages })}
           </p>
           <p className="text-xs text-pretty text-muted-foreground">
-            {t("profile.resume.text.explainer")}
+            {aiView
+              ? t("profile.resume.text.aiExplainer", { count: hidden })
+              : t("profile.resume.text.explainer")}
           </p>
         </div>
-        {action}
+        <div className="flex items-center gap-2">
+          <Toggle
+            variant="outline"
+            size="sm"
+            pressed={aiView}
+            onPressedChange={setAiView}
+            className="data-pressed:bg-secondary"
+          >
+            <ScanEyeIcon data-icon="inline-start" aria-hidden="true" />
+            {t("profile.resume.text.aiView")}
+          </Toggle>
+          {action}
+        </div>
       </div>
       {actionError}
       {groups.map((group) => (
@@ -182,6 +208,7 @@ function ReadText({
           key={group.passages[0].id}
           group={group}
           showPages={data.pages > 1}
+          aiView={aiView}
         />
       ))}
     </div>
@@ -191,9 +218,11 @@ function ReadText({
 function SectionBlock({
   group,
   showPages,
+  aiView,
 }: {
   group: Group
   showPages: boolean
+  aiView: boolean
 }) {
   const { t } = useTranslation()
   const headingId = useId()
@@ -217,7 +246,7 @@ function SectionBlock({
       <ul className="flex flex-col gap-1.5 border-l pl-3">
         {group.passages.map((passage) => (
           <li key={passage.id} className="text-sm/relaxed text-pretty">
-            <PassageText passage={passage} />
+            <PassageText passage={passage} aiView={aiView} />
           </li>
         ))}
       </ul>
@@ -225,25 +254,70 @@ function SectionBlock({
   )
 }
 
-/** The passage, with each date range it understood set in a mono chip. */
-function PassageText({ passage }: { passage: Passage }) {
+type Mark =
+  | { start: number; end: number; type: "period" }
+  | { start: number; end: number; type: "hidden"; kind: RedactionKind }
+
+/** Where each date range sits in the passage, found in reading order. */
+function periodMarks(passage: Passage): Mark[] {
+  const marks: Mark[] = []
+  let from = 0
+  for (const period of passage.periods) {
+    const start = passage.text.indexOf(period.text, from)
+    if (start < 0) continue
+    marks.push({ start, end: start + period.text.length, type: "period" })
+    from = start + period.text.length
+  }
+  return marks
+}
+
+/**
+ * The passage, with each date range it understood set in a mono chip. In the AI's
+ * view, personal data is replaced by a marker of what it was, as the AI reads it.
+ */
+function PassageText({
+  passage,
+  aiView,
+}: {
+  passage: Passage
+  aiView: boolean
+}) {
+  const { t } = useTranslation()
+  const hidden: Mark[] = aiView
+    ? passage.redactions.map((r) => ({ ...r, type: "hidden" }))
+    : []
+  // A date inside hidden data (a birth date) stays hidden.
+  const marks = [
+    ...hidden,
+    ...periodMarks(passage).filter(
+      (p) => !hidden.some((h) => p.start < h.end && h.start < p.end)
+    ),
+  ].sort((a, b) => a.start - b.start)
+
   const parts: ReactNode[] = []
-  let rest = passage.text
-  passage.periods.forEach((period, index) => {
-    const at = rest.indexOf(period.text)
-    if (at < 0) return
-    if (at > 0) parts.push(rest.slice(0, at))
+  let cursor = 0
+  for (const mark of marks) {
+    if (mark.start > cursor) parts.push(passage.text.slice(cursor, mark.start))
     parts.push(
-      <span
-        key={index}
-        className="rounded-sm bg-muted px-0.5 font-mono text-[0.8125rem] whitespace-nowrap text-foreground tabular-nums"
-      >
-        {period.text}
-      </span>
+      mark.type === "hidden" ? (
+        <span
+          key={mark.start}
+          className="rounded-sm border border-dashed border-muted-foreground/40 px-1 text-[0.6875rem] font-medium tracking-wide whitespace-nowrap text-muted-foreground uppercase"
+        >
+          {t(`profile.resume.text.hidden.${mark.kind}`)}
+        </span>
+      ) : (
+        <span
+          key={mark.start}
+          className="rounded-sm bg-muted px-0.5 font-mono text-[0.8125rem] whitespace-nowrap text-foreground tabular-nums"
+        >
+          {passage.text.slice(mark.start, mark.end)}
+        </span>
+      )
     )
-    rest = rest.slice(at + period.text.length)
-  })
-  parts.push(rest)
+    cursor = mark.end
+  }
+  parts.push(passage.text.slice(cursor))
   return <>{parts}</>
 }
 

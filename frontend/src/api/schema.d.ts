@@ -1445,6 +1445,9 @@ export interface components {
       readonly section: components["schemas"]["SectionEnum"]
       readonly text: string
       readonly periods: components["schemas"]["Period"][]
+      /** Redacted text */
+      readonly redacted: string
+      readonly redactions: components["schemas"]["Redaction"][]
     }
     PasswordResetConfirmRequest: {
       uid: string
@@ -1597,6 +1600,43 @@ export interface components {
       currency: string
       period: components["schemas"]["SalaryPeriodEnum"]
     }
+    Redaction: {
+      kind: components["schemas"]["RedactionKindEnum"]
+      start: number
+      end: number
+    }
+    /**
+     * @description * `name` - name
+     *     * `email` - email
+     *     * `phone` - phone
+     *     * `url` - url
+     *     * `curp` - curp
+     *     * `rfc` - rfc
+     *     * `nss` - nss
+     *     * `birthdate` - birthdate
+     *     * `age` - age
+     *     * `marital_status` - marital_status
+     *     * `gender` - gender
+     *     * `nationality` - nationality
+     *     * `address` - address
+     *     * `location` - location
+     * @enum {string}
+     */
+    RedactionKindEnum:
+      | "name"
+      | "email"
+      | "phone"
+      | "url"
+      | "curp"
+      | "rfc"
+      | "nss"
+      | "birthdate"
+      | "age"
+      | "marital_status"
+      | "gender"
+      | "nationality"
+      | "address"
+      | "location"
     /**
      * @description * `requirements` - Doesn't meet the requirements
      *     * `other_candidate` - Another candidate was chosen
@@ -1647,6 +1687,7 @@ export interface components {
         | components["schemas"]["BlankEnum"]
       detail: string
       pages: number
+      language: string
       /** Format: date-time */
       extracted_at: string | null
       passages: components["schemas"]["Passage"][]

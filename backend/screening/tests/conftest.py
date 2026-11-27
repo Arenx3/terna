@@ -78,6 +78,27 @@ def docx_resume(language: str = "es") -> bytes:
     return buffer.getvalue()
 
 
+def docx_from_lines(lines: list[str], header_lines: int = 2) -> bytes:
+    """A Word résumé from plain lines: the first ones in the page header, "# " headings,
+    "• " bullets."""
+    document = Document()
+    header = document.sections[0].header
+    header.is_linked_to_previous = False
+    header.paragraphs[0].text = lines[0]
+    for line in lines[1:header_lines]:
+        header.add_paragraph(line)
+    for line in lines[header_lines:]:
+        if line.startswith("# "):
+            document.add_heading(line[2:], level=1)
+        elif line.startswith("• "):
+            document.add_paragraph(line[2:], style="List Bullet")
+        else:
+            document.add_paragraph(line)
+    buffer = io.BytesIO()
+    document.save(buffer)
+    return buffer.getvalue()
+
+
 @pytest.fixture
 def deliver(django_capture_on_commit_callbacks):
     """Run the outbox and whatever it hands to the workers, the way production would."""

@@ -215,6 +215,7 @@ SPECTACULAR_SETTINGS = {
         "ExtractionStatusEnum": "screening.models.ResumeExtraction.Status",
         "ExtractionReasonEnum": "screening.models.ResumeExtraction.Reason",
         "SectionEnum": "screening.models.Section",
+        "RedactionKindEnum": "screening.redaction.KINDS",
     },
 }
 

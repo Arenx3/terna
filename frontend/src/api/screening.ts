@@ -6,6 +6,7 @@ import { ApiError } from "@/api/errors"
 export type ResumeText = Schemas["ResumeText"]
 export type Passage = Schemas["Passage"]
 export type Section = Schemas["SectionEnum"]
+export type RedactionKind = Schemas["RedactionKindEnum"]
 export type ExtractionStatus = Schemas["ExtractionStatusEnum"]
 export type ExtractionReason = Schemas["ExtractionReasonEnum"]
 

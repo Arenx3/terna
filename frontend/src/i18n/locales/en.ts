@@ -667,6 +667,27 @@ export const en = {
         passages_other: "{{count}} passages read",
         explainer:
           "This is how Terna reads this résumé. Screening cites these lines as evidence.",
+        aiView: "What the AI sees",
+        aiExplainer_one:
+          "The AI reads this same text with {{count}} personal detail hidden. You still see the original.",
+        aiExplainer_other:
+          "The AI reads this same text with {{count}} personal details hidden. You still see the original.",
+        hidden: {
+          name: "name",
+          email: "email",
+          phone: "phone",
+          url: "link",
+          curp: "CURP",
+          rfc: "RFC",
+          nss: "SSN",
+          birthdate: "birth date",
+          age: "age",
+          marital_status: "marital status",
+          gender: "gender",
+          nationality: "nationality",
+          address: "address",
+          location: "location",
+        },
         reading: "Reading the résumé…",
         loadError: "Couldn't load the résumé text.",
         readAgain: "Read again",
