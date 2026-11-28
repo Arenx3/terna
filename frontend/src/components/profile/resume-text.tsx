@@ -5,7 +5,7 @@ import {
   RotateCwIcon,
   ScanEyeIcon,
 } from "lucide-react"
-import { useId, useState, type ReactNode } from "react"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { errorMessage } from "@/api/errors"
@@ -19,11 +19,13 @@ import {
   type Section,
 } from "@/api/screening"
 import { useSession } from "@/auth/session"
+import type { Highlight } from "@/components/profile/screening-view"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Toggle } from "@/components/ui/toggle"
+import { INLINE, mergeSpans } from "@/components/screening/marked-text"
 
 type Group = { section: Section; passages: Passage[] }
 
@@ -47,11 +49,16 @@ export function ResumeTextView({
   applicationId,
   canManage,
   onShowDocument,
+  highlight = null,
+  onClearHighlight,
 }: {
   applicationId: number
   canManage: boolean
   /** Switch to the original file, when there is a preview to switch to. */
   onShowDocument?: () => void
+  /** A requirement's evidence, highlighted where it sits. */
+  highlight?: Highlight | null
+  onClearHighlight?: () => void
 }) {
   const { t } = useTranslation()
   const { session } = useSession()
@@ -150,7 +157,13 @@ export function ResumeTextView({
   }
 
   return (
-    <ReadText data={data} action={readAgain} actionError={reprocessError} />
+    <ReadText
+      data={data}
+      action={readAgain}
+      actionError={reprocessError}
+      highlight={highlight}
+      onClearHighlight={onClearHighlight}
+    />
   )
 }
 
@@ -158,13 +171,26 @@ function ReadText({
   data,
   action,
   actionError,
+  highlight,
+  onClearHighlight,
 }: {
   data: ResumeText
   action: ReactNode
   actionError: ReactNode
+  highlight: Highlight | null
+  onClearHighlight?: () => void
 }) {
   const { t } = useTranslation()
   const [aiView, setAiView] = useState(false)
+  const container = useRef<HTMLDivElement>(null)
+
+  // Bring the first highlighted line into view, where the recruiter can check it.
+  useEffect(() => {
+    if (!highlight) return
+    container.current
+      ?.querySelector("[data-evidence]")
+      ?.scrollIntoView({ block: "center" })
+  }, [highlight])
   const groups = groupBySection(data.passages)
   const hidden = data.passages.reduce(
     (total, passage) => total + passage.redactions.length,
@@ -176,7 +202,25 @@ function ReadText({
   })
 
   return (
-    <div className="flex flex-col gap-5">
+    <div ref={container} className="flex flex-col gap-5">
+      {highlight ? (
+        <div
+          role="status"
+          className="flex items-center justify-between gap-3 rounded-lg border bg-muted/50 py-1.5 pr-1.5 pl-3 text-sm"
+        >
+          <p className="min-w-0 text-muted-foreground">
+            {t("profile.resume.text.highlighting")}{" "}
+            <span className="font-medium text-foreground">
+              {highlight.requirement}
+            </span>
+          </p>
+          {onClearHighlight ? (
+            <Button variant="ghost" size="sm" onClick={onClearHighlight}>
+              {t("profile.resume.text.clearHighlight")}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <p className="text-sm font-medium">
@@ -209,6 +253,7 @@ function ReadText({
           group={group}
           showPages={data.pages > 1}
           aiView={aiView}
+          highlight={highlight}
         />
       ))}
     </div>
@@ -219,10 +264,12 @@ function SectionBlock({
   group,
   showPages,
   aiView,
+  highlight,
 }: {
   group: Group
   showPages: boolean
   aiView: boolean
+  highlight: Highlight | null
 }) {
   const { t } = useTranslation()
   const headingId = useId()
@@ -244,11 +291,22 @@ function SectionBlock({
         ) : null}
       </h4>
       <ul className="flex flex-col gap-1.5 border-l pl-3">
-        {group.passages.map((passage) => (
-          <li key={passage.id} className="text-sm/relaxed text-pretty">
-            <PassageText passage={passage} aiView={aiView} />
-          </li>
-        ))}
+        {group.passages.map((passage) => {
+          const evidence = highlight?.passages[passage.id]
+          return (
+            <li
+              key={passage.id}
+              data-evidence={evidence ? "" : undefined}
+              className="scroll-m-24 text-sm/relaxed text-pretty"
+            >
+              <PassageText
+                passage={passage}
+                aiView={aiView}
+                evidence={evidence ?? []}
+              />
+            </li>
+          )
+        })}
       </ul>
     </section>
   )
@@ -256,6 +314,7 @@ function SectionBlock({
 
 type Mark =
   | { start: number; end: number; type: "period" }
+  | { start: number; end: number; type: "evidence" }
   | { start: number; end: number; type: "hidden"; kind: RedactionKind }
 
 /** Where each date range sits in the passage, found in reading order. */
@@ -278,20 +337,27 @@ function periodMarks(passage: Passage): Mark[] {
 function PassageText({
   passage,
   aiView,
+  evidence,
 }: {
   passage: Passage
   aiView: boolean
+  evidence: number[][]
 }) {
   const { t } = useTranslation()
   const hidden: Mark[] = aiView
     ? passage.redactions.map((r) => ({ ...r, type: "hidden" }))
     : []
-  // A date inside hidden data (a birth date) stays hidden.
+  const overlaps = (a: Mark, others: Mark[]) =>
+    others.some((b) => a.start < b.end && b.start < a.end)
+  // Hidden data wins over everything (a birth date stays hidden); evidence wins
+  // over the date chips it covers.
+  const marked: Mark[] = mergeSpans(evidence)
+    .map(([start, end]): Mark => ({ start, end, type: "evidence" }))
+    .filter((mark) => !overlaps(mark, hidden))
   const marks = [
     ...hidden,
-    ...periodMarks(passage).filter(
-      (p) => !hidden.some((h) => p.start < h.end && h.start < p.end)
-    ),
+    ...marked,
+    ...periodMarks(passage).filter((p) => !overlaps(p, [...hidden, ...marked])),
   ].sort((a, b) => a.start - b.start)
 
   const parts: ReactNode[] = []
@@ -299,7 +365,11 @@ function PassageText({
   for (const mark of marks) {
     if (mark.start > cursor) parts.push(passage.text.slice(cursor, mark.start))
     parts.push(
-      mark.type === "hidden" ? (
+      mark.type === "evidence" ? (
+        <mark key={mark.start} className={`${INLINE} marker-draw`}>
+          {passage.text.slice(mark.start, mark.end)}
+        </mark>
+      ) : mark.type === "hidden" ? (
         <span
           key={mark.start}
           className="rounded-sm border border-dashed border-muted-foreground/40 px-1 text-[0.6875rem] font-medium tracking-wide whitespace-nowrap text-muted-foreground uppercase"

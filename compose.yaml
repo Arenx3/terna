@@ -236,6 +236,12 @@ services:
       target: ml
     image: terna-backend-ml:dev
     command: ["celery", "-A", "config", "worker", "--queues", "ml", "--hostname", "ml@%h", "--concurrency", "1"]
+    environment:
+      <<: *backend-environment
+      # Empty means Terna's pinned model (see .env.example).
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      EMBEDDING_MODEL_REVISION: ${EMBEDDING_MODEL_REVISION:-}
+      ML_THREADS: ${ML_THREADS:-2}
     volumes:
       - secrets:/run/secrets:ro
       - models-cache:/models

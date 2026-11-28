@@ -38,10 +38,11 @@ export function NotificationsMenu() {
   })
 
   // Boards are for people who work on jobs; interviewers open the candidate alone.
+  // Either way, on the activity: where the comment or the assignment is.
   const href = (item: AppNotification) =>
     canSeeJobs
-      ? `/jobs/${item.job_id}/candidates/${item.application}`
-      : `/applications/${item.application}`
+      ? `/jobs/${item.job_id}/candidates/${item.application}?tab=activity`
+      : `/applications/${item.application}?tab=activity`
 
   return (
     <DropdownMenu>

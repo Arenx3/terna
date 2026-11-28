@@ -10,7 +10,7 @@ import {
 } from "lucide-react"
 import { useEffect, useId, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Link } from "react-router"
+import { Link, useSearchParams } from "react-router"
 
 import type { RejectionReason } from "@/api/applications"
 import { ApiError } from "@/api/errors"
@@ -33,6 +33,10 @@ import { useSession } from "@/auth/session"
 import { JobStatusBadge } from "@/components/jobs/job-status-badge"
 import { CandidateEmails } from "@/components/profile/candidate-emails"
 import { ResumeTextView } from "@/components/profile/resume-text"
+import {
+  ScreeningView,
+  type Highlight,
+} from "@/components/profile/screening-view"
 import { useStageLabel } from "@/components/jobs/stages-editor"
 import {
   mentionedIn,
@@ -53,6 +57,14 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { initials, relativeTime, shortDate } from "@/lib/format"
 
 type Stage = { name: string; kind: StageKind }
+
+const PROFILE_TABS = [
+  "screening",
+  "activity",
+  "resume",
+  "emails",
+  "applications",
+] as const
 
 /**
  * Everything about one candidate, for the people working on them: who they
@@ -108,6 +120,18 @@ function ProfileBody({
   const { t, i18n } = useTranslation()
   const stageLabel = useStageLabel()
   const { candidate } = profile
+  // The screening first: it's what a recruiter opens a candidate to check. A link
+  // can ask for another tab (a notification opens the activity).
+  const [params, setParams] = useSearchParams()
+  const requested = params.get("tab")
+  const [tab, setTab] = useState(
+    requested && PROFILE_TABS.some((name) => name === requested)
+      ? requested
+      : profile.resume
+        ? "screening"
+        : "activity"
+  )
+  const [highlight, setHighlight] = useState<Highlight | null>(null)
 
   return (
     <div className="flex flex-col gap-6">
@@ -169,8 +193,31 @@ function ProfileBody({
         </dl>
       </header>
 
-      <Tabs defaultValue="activity" className="gap-5">
-        <TabsList variant="line" className="w-full justify-start border-b">
+      <Tabs
+        value={tab}
+        onValueChange={(next) => {
+          setTab(String(next))
+          // The address says which tab is open, so it can be shared or reloaded.
+          setParams(
+            (current) => {
+              current.set("tab", String(next))
+              return current
+            },
+            { replace: true }
+          )
+        }}
+        className="gap-5"
+      >
+        {/* Five tabs don't fit a phone: they scroll sideways there. */}
+        <TabsList
+          variant="line"
+          className="w-full [scrollbar-width:none] justify-start overflow-x-auto overflow-y-hidden border-b max-sm:*:flex-none"
+        >
+          {profile.resume ? (
+            <TabsTrigger value="screening">
+              {t("profile.tabs.screening")}
+            </TabsTrigger>
+          ) : null}
           <TabsTrigger value="activity">
             {t("profile.tabs.activity")}
           </TabsTrigger>
@@ -183,11 +230,34 @@ function ProfileBody({
             </span>
           </TabsTrigger>
         </TabsList>
+        {profile.resume ? (
+          <TabsContent value="screening">
+            <ScreeningView
+              applicationId={profile.id}
+              canManage={profile.can_manage}
+              onShowInResume={(next) => {
+                setHighlight(next)
+                setTab("resume")
+                setParams(
+                  (current) => {
+                    current.set("tab", "resume")
+                    return current
+                  },
+                  { replace: true }
+                )
+              }}
+            />
+          </TabsContent>
+        ) : null}
         <TabsContent value="activity">
           <Activity profile={profile} />
         </TabsContent>
         <TabsContent value="resume">
-          <ResumeViewer profile={profile} />
+          <ResumeViewer
+            profile={profile}
+            highlight={highlight}
+            onClearHighlight={() => setHighlight(null)}
+          />
         </TabsContent>
         <TabsContent value="emails">
           <CandidateEmails profile={profile} />
@@ -509,10 +579,24 @@ const RESUME_VIEWS = ["text", "document"] as const
 type ResumeView = (typeof RESUME_VIEWS)[number]
 
 /** The résumé: the text the screening read from it, or the original file. */
-function ResumeViewer({ profile }: { profile: Profile }) {
+function ResumeViewer({
+  profile,
+  highlight,
+  onClearHighlight,
+}: {
+  profile: Profile
+  highlight: Highlight | null
+  onClearHighlight: () => void
+}) {
   const { t } = useTranslation()
   const [view, setView] = useState<ResumeView>("text")
   const resume = profile.resume
+  // Evidence is highlighted in the text, so that's the view it opens in.
+  const [shown, setShown] = useState(highlight)
+  if (highlight !== shown) {
+    setShown(highlight)
+    if (highlight) setView("text")
+  }
 
   async function download() {
     window.location.assign(await resumeUrl(profile.id, false))
@@ -567,6 +651,8 @@ function ResumeViewer({ profile }: { profile: Profile }) {
           applicationId={profile.id}
           canManage={profile.can_manage}
           onShowDocument={isPdf ? () => setView("document") : undefined}
+          highlight={highlight}
+          onClearHighlight={onClearHighlight}
         />
       ) : isPdf ? (
         <PdfPreview profile={profile} />

@@ -1,3 +1,7 @@
+import hashlib
+import math
+import re
+
 import pytest
 from botocore.exceptions import ClientError
 from django.conf import settings
@@ -9,8 +13,49 @@ from rest_framework.test import APIClient
 from accounts.models import Membership, User
 from accounts.sessions import issue_refresh_token
 from core.storage import s3_client
+from screening import embeddings
+from screening.models import DIMENSIONS
+from screening.redaction import fold
 from tenancy.context import tenant_context
 from tenancy.services import create_company
+
+
+class StandInModel:
+    """Takes the embedding model's place in tests: the real one is a download away, and
+    only the ml image has it. Words hashed into the vector, so texts that share words
+    are close; `close(a, b)` makes two texts close without sharing any, the way the
+    real model brings Spanish and English together."""
+
+    def __init__(self) -> None:
+        self.calls: list[list[str]] = []
+        self.pairs: list[tuple[str, str]] = []
+        self.broken: Exception | None = None
+
+    def close(self, a: str, b: str) -> None:
+        self.pairs.append((a, b))
+
+    def vector(self, text: str) -> list[float]:
+        values = [0.0] * DIMENSIONS
+        for word in re.findall(r"[a-z0-9]{3,}", fold(text)):
+            values[int(hashlib.sha256(word.encode()).hexdigest(), 16) % DIMENSIONS] += 1.0
+        for index, (a, b) in enumerate(self.pairs):
+            if a in text or b in text:
+                values[(index * 7) % DIMENSIONS] += 10.0
+        norm = math.sqrt(sum(v * v for v in values)) or 1.0
+        return [v / norm for v in values]
+
+    def encode(self, texts: list[str]) -> list[list[float]]:
+        if self.broken:
+            raise self.broken
+        self.calls.append(list(texts))
+        return [self.vector(text) for text in texts]
+
+
+@pytest.fixture(autouse=True)
+def model(monkeypatch) -> StandInModel:
+    stand_in = StandInModel()
+    monkeypatch.setattr(embeddings, "encode", lambda texts: stand_in.encode(texts) if texts else [])
+    return stand_in
 
 
 @pytest.fixture(autouse=True)

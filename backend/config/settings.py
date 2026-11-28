@@ -216,6 +216,10 @@ SPECTACULAR_SETTINGS = {
         "ExtractionReasonEnum": "screening.models.ResumeExtraction.Reason",
         "SectionEnum": "screening.models.Section",
         "RedactionKindEnum": "screening.redaction.KINDS",
+        "ScreeningStatusEnum": "screening.models.Screening.Status",
+        "VerdictEnum": "screening.models.Verdict",
+        "SignalLevelEnum": "screening.serializers.SIGNAL_LEVELS",
+        "SignalEnum": "screening.serializers.SIGNALS",
     },
 }
 
@@ -229,7 +233,11 @@ CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
-CELERY_TASK_ROUTES = {"screening.tasks.extract_resume": {"queue": "ml"}}
+CELERY_TASK_ROUTES = {
+    "screening.tasks.extract_resume": {"queue": "ml"},
+    "screening.tasks.screen_application": {"queue": "ml"},
+    "screening.tasks.load_model": {"queue": "ml"},
+}
 CELERY_BEAT_SCHEDULER = "core.beat:HeartbeatScheduler"
 CELERY_BEAT_MAX_LOOP_INTERVAL = 30
 CELERY_BEAT_SCHEDULE: dict = {
@@ -245,7 +253,19 @@ CELERY_BEAT_SCHEDULE: dict = {
         "task": "screening.tasks.recover_resume_extractions",
         "schedule": 120.0,
     },
+    # Applications never screened, or screened by older rules, are screened again.
+    "recover-screenings": {"task": "screening.tasks.recover_screenings", "schedule": 120.0},
 }
+
+# Screening: a local multilingual sentence model, downloaded once into the ml worker's
+# cache. The revision pins the exact weights, so a screening never changes by itself.
+EMBEDDING_MODEL = env(
+    "EMBEDDING_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+)
+EMBEDDING_MODEL_REVISION = env(
+    "EMBEDDING_MODEL_REVISION", "e8f8c211226b894fcb81acc59f3b34ba3efd5f42"
+)
+ML_THREADS = env_int("ML_THREADS", 2)
 
 # Object storage (S3 compatible). The public endpoint is the one browsers reach.
 

@@ -6,7 +6,10 @@ import { refreshSession, sessionStore } from "@/auth/session"
 export type Viewer = { key: string; user: { id: string; name: string } }
 
 export type BoardUpdate = {
-  event: "application.submitted" | "application.stage_changed"
+  event:
+    | "application.submitted"
+    | "application.stage_changed"
+    | "screening.completed"
   application: JobApplication
   by: { id: string | null; name: string }
 }

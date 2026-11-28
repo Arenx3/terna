@@ -11,6 +11,7 @@ from candidates import pipeline
 from candidates.models import Application, Candidate, Resume
 from jobs.models import PipelineStage
 from jobs.views import CanSeeJobs, visible_jobs
+from screening.serializers import ScreeningSummarySerializer
 
 
 class ApplicantSerializer(serializers.ModelSerializer):
@@ -38,6 +39,8 @@ class ApplicationSerializer(serializers.ModelSerializer):
     candidate = ApplicantSerializer(read_only=True)
     stage = ApplicationStageSerializer(read_only=True)
     resume = ResumeFileSerializer(read_only=True, allow_null=True)
+    # Null until the résumé has been read and the screening scheduled.
+    screening = ScreeningSummarySerializer(read_only=True, allow_null=True)
     # Empty unless the candidate is in a rejected stage.
     rejection_reason = serializers.ChoiceField(
         choices=Application.RejectionReason.choices, allow_blank=True, read_only=True
@@ -50,6 +53,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "candidate",
             "stage",
             "resume",
+            "screening",
             "source",
             "created_at",
             "stage_entered_at",
@@ -68,7 +72,7 @@ class JobApplicationsView(CompanyView):
             raise exceptions.NotFound
         applications = (
             Application.objects.filter(job=job)
-            .select_related("candidate", "stage", "resume")
+            .select_related("candidate", "stage", "resume", "screening")
             .order_by("-created_at")
         )
         return Response(ApplicationSerializer(applications, many=True).data)

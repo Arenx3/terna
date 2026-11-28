@@ -294,6 +294,14 @@ function DaySection({ day, entries }: { day: string; entries: AuditEvent[] }) {
   )
 }
 
+/** A screening's must-have count, as its event recorded it: [met, total]. */
+function screened(payload: unknown): { met: number; total: number } {
+  const must = (payload as { must?: unknown } | null)?.must
+  return Array.isArray(must) && must.length === 2
+    ? { met: Number(must[0]), total: Number(must[1]) }
+    : { met: 0, total: 0 }
+}
+
 function Entry({ entry }: { entry: AuditEvent }) {
   const { t, i18n } = useTranslation()
   const stageLabel = useStageLabel()
@@ -316,6 +324,7 @@ function Entry({ entry }: { entry: AuditEvent }) {
       ? (entry.payload as { interviewers: string[] }).interviewers.join(", ")
       : "",
     title: typeof payload.subject === "string" ? payload.subject : "",
+    ...screened(entry.payload),
   })
   const actor = entry.actor_name || t("audit.system")
   const time = new Intl.DateTimeFormat(i18n.language, {
