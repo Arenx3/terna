@@ -13,6 +13,7 @@ export const AUDIT_AREAS = [
   "comment",
   "candidate",
   "email",
+  "screening",
   "member",
   "invitation",
 ] as const

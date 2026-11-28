@@ -18,6 +18,7 @@ import { currentCompanyQuery } from "@/api/careers"
 import { sendEmail } from "@/api/messaging"
 import { ApiError, errorMessage } from "@/api/errors"
 import { jobQuery } from "@/api/jobs"
+import { screeningQuery } from "@/api/screening"
 import { useRole } from "@/auth/roles"
 import { useSession } from "@/auth/session"
 import {
@@ -89,8 +90,25 @@ export function JobCandidatesPage() {
       queryClient.setQueryData(listKey, (list: JobApplication[] | undefined) =>
         upsert(list, update.application)
       )
-      if (update.by.id === session?.user.id) return // our own move, already announced
       const name = update.application.candidate.full_name
+      if (update.event === "screening.completed") {
+        // An open profile shows the new verdicts without a reload.
+        void queryClient.invalidateQueries({
+          queryKey: screeningQuery(companyId, update.application.id).queryKey,
+        })
+        const screening = update.application.screening
+        if (screening) {
+          setAnnouncement(
+            t("board.screened", {
+              name,
+              met: screening.must_meets,
+              total: screening.must_total,
+            })
+          )
+        }
+        return
+      }
+      if (update.by.id === session?.user.id) return // our own move, already announced
       setAnnouncement(
         update.event === "application.submitted"
           ? t("board.added", { name })

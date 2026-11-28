@@ -54,6 +54,12 @@ test("the team opens a candidate, assigns an interviewer and talks about them", 
   await expect(panel).toBeVisible()
   await expect(page).toHaveURL(new RegExp(`/jobs/${jobId}/candidates/\\d+$`))
   const profileUrl = page.url()
+  // It opens on the screening; the team's activity is the next tab.
+  await expect(panel.getByRole("tab", { name: "Screening" })).toHaveAttribute(
+    "aria-selected",
+    "true"
+  )
+  await panel.getByRole("tab", { name: "Activity" }).click()
   await expect(panel.getByText("Applied to Data Engineer")).toBeVisible()
   await expectNoAccessibilityViolations(page)
 

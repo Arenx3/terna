@@ -41,6 +41,26 @@ urlpatterns = [
         name="resume-reprocess",
     ),
     path(
+        "api/applications/<int:pk>/screening/",
+        screening_views.ScreeningView.as_view(),
+        name="screening",
+    ),
+    path(
+        "api/applications/<int:pk>/screening/rerun/",
+        screening_views.RescreenView.as_view(),
+        name="screening-rerun",
+    ),
+    path(
+        "api/screening/dictionary/",
+        screening_views.DictionaryView.as_view(),
+        name="screening-dictionary",
+    ),
+    path(
+        "api/screening/dictionary/<int:pk>/",
+        screening_views.DictionaryEntryView.as_view(),
+        name="screening-dictionary-entry",
+    ),
+    path(
         "api/applications/<int:pk>/timeline/",
         profile.TimelineView.as_view(),
         name="application-timeline",

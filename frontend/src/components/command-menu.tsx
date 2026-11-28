@@ -1,4 +1,5 @@
 import {
+  BookOpenTextIcon,
   BriefcaseBusinessIcon,
   HouseIcon,
   MailIcon,
@@ -113,6 +114,14 @@ export function CommandMenu({
               >
                 <MailIcon aria-hidden="true" />
                 <Label>{t("nav.emails")}</Label>
+              </CommandItem>
+            ) : null}
+            {canSeeJobs ? (
+              <CommandItem
+                onSelect={() => run(() => navigate("/settings/synonyms"))}
+              >
+                <BookOpenTextIcon aria-hidden="true" />
+                <Label>{t("nav.dictionary")}</Label>
               </CommandItem>
             ) : null}
             {isAdmin ? (

@@ -15,6 +15,7 @@ class EventType(models.TextChoices):
     JOB_REOPENED = "job.reopened", _("Job reopened")
     JOB_CLOSED = "job.closed", _("Job closed")
     JOB_DELETED = "job.deleted", _("Draft job deleted")
+    JOB_REQUIREMENTS_CHANGED = "job.requirements_changed", _("Job requirements changed")
     MEMBER_JOINED = "member.joined", _("Member joined")
     MEMBER_ROLE_CHANGED = "member.role_changed", _("Member role changed")
     MEMBER_REMOVED = "member.removed", _("Member removed")
@@ -28,6 +29,7 @@ class EventType(models.TextChoices):
     EMAIL_QUEUED = "email.queued", _("Email written to a candidate")
     EMAIL_SENT = "email.sent", _("Email sent to a candidate")
     EMAIL_FAILED = "email.failed", _("Email to a candidate failed")
+    SCREENING_COMPLETED = "screening.completed", _("Screening completed")
 
 
 class EventFields(models.Model):

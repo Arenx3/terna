@@ -33,7 +33,11 @@ UNAUTHENTICATED = 4401
 FORBIDDEN = 4403
 
 VIEWER_ROLES = {Membership.Role.ADMIN, Membership.Role.RECRUITER, Membership.Role.HIRING_MANAGER}
-BOARD_EVENTS = {EventType.APPLICATION_SUBMITTED, EventType.APPLICATION_STAGE_CHANGED}
+BOARD_EVENTS = {
+    EventType.APPLICATION_SUBMITTED,
+    EventType.APPLICATION_STAGE_CHANGED,
+    EventType.SCREENING_COMPLETED,
+}
 
 
 def board_group(company_id, job_id) -> str:
@@ -149,7 +153,7 @@ def broadcast(event: OutboxEvent) -> None:
 
     try:
         application = (
-            Application.objects.select_related("candidate", "stage", "resume")
+            Application.objects.select_related("candidate", "stage", "resume", "screening")
             .filter(pk=int(event.entity_id))
             .first()
         )

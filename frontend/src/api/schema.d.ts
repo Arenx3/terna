@@ -191,6 +191,44 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/applications/{id}/screening/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Every requirement with its verdict and the lines of the résumé behind it. */
+    get: operations["applications_screening_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/applications/{id}/screening/rerun/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    post: operations["applications_screening_rerun_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/applications/{id}/timeline/": {
     parameters: {
       query?: never
@@ -831,6 +869,46 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/screening/dictionary/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Terna's synonyms with the company's own on top. */
+    get: operations["screening_dictionary_list"]
+    put?: never
+    /** @description Terna's synonyms with the company's own on top. */
+    post: operations["screening_dictionary_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/screening/dictionary/{id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * @description Base for views over the active company's data: members only.
+     *
+     *     Events emitted during the request are attributed to the caller.
+     */
+    put: operations["screening_dictionary_update"]
+    post?: never
+    /** @description A built-in entry the company had replaced comes back. */
+    delete: operations["screening_dictionary_destroy"]
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/team/invitations/": {
     parameters: {
       query?: never
@@ -945,6 +1023,7 @@ export interface components {
       readonly candidate: components["schemas"]["Applicant"]
       readonly stage: components["schemas"]["ApplicationStage"]
       readonly resume: components["schemas"]["ResumeFile"] | null
+      readonly screening: components["schemas"]["ScreeningSummary"] | null
       readonly source: components["schemas"]["SourceEnum"]
       /**
        * Applied at
@@ -1143,12 +1222,24 @@ export interface components {
      * @enum {string}
      */
     EmploymentEnum: "full_time" | "part_time" | "contract" | "internship"
+    Entry: {
+      readonly id: number | null
+      term: string
+      aliases: string[]
+      readonly built_in: boolean
+      readonly overrides: boolean
+    }
+    EntryRequest: {
+      term: string
+      aliases: string[]
+    }
     /**
      * @description * `job.created` - Job created
      *     * `job.published` - Job published
      *     * `job.reopened` - Job reopened
      *     * `job.closed` - Job closed
      *     * `job.deleted` - Draft job deleted
+     *     * `job.requirements_changed` - Job requirements changed
      *     * `member.joined` - Member joined
      *     * `member.role_changed` - Member role changed
      *     * `member.removed` - Member removed
@@ -1162,6 +1253,7 @@ export interface components {
      *     * `email.queued` - Email written to a candidate
      *     * `email.sent` - Email sent to a candidate
      *     * `email.failed` - Email to a candidate failed
+     *     * `screening.completed` - Screening completed
      * @enum {string}
      */
     EventTypeEnum:
@@ -1170,6 +1262,7 @@ export interface components {
       | "job.reopened"
       | "job.closed"
       | "job.deleted"
+      | "job.requirements_changed"
       | "member.joined"
       | "member.role_changed"
       | "member.removed"
@@ -1183,6 +1276,20 @@ export interface components {
       | "email.queued"
       | "email.sent"
       | "email.failed"
+      | "screening.completed"
+    Evidence: {
+      passage: components["schemas"]["EvidencePassage"]
+      /** @description [start, end) offsets into the passage text. */
+      spans: number[][]
+      signals: components["schemas"]["SignalEnum"][]
+    }
+    EvidencePassage: {
+      id: number
+      page: number
+      position: number
+      section: components["schemas"]["SectionEnum"]
+      text: string
+    }
     /**
      * @description * `no_text` - The file has no text to read, like a scanned page
      *     * `encrypted` - The file is password protected
@@ -1209,6 +1316,12 @@ export interface components {
      * @enum {string}
      */
     FormatEnum: "pdf" | "docx"
+    FoundTerm: {
+      /** @description As the requirement writes it. */
+      term: string
+      /** @description As the résumé writes it: an alias, maybe. */
+      matched: string
+    }
     Health: {
       status: components["schemas"]["HealthStatusEnum"]
       checks: {
@@ -1360,12 +1473,22 @@ export interface components {
       /** Format: date-time */
       readonly closed_at: string | null
     }
+    KeywordSignal: {
+      level: components["schemas"]["SignalLevelEnum"]
+      found: components["schemas"]["FoundTerm"][]
+      missing: string[]
+    }
     /**
      * @description * `en` - English
      *     * `es` - Español
      * @enum {string}
      */
     LanguageEnum: "en" | "es"
+    LevelSignal: {
+      language: string
+      required: string
+      found: string | null
+    }
     LoginRequest: {
       /** Format: email */
       email: string
@@ -1428,6 +1551,8 @@ export interface components {
      * @enum {string}
      */
     NotificationKindEnum: "mention" | "assigned"
+    /** @enum {unknown} */
+    NullEnum: null
     OtherApplication: {
       readonly id: number
       readonly job: components["schemas"]["ProfileJob"]
@@ -1669,6 +1794,19 @@ export interface components {
       text: string
       kind: components["schemas"]["RequirementKindEnum"]
     }
+    RequirementResult: {
+      id: number
+      text: string
+      kind: string
+      verdict:
+        | (
+            | components["schemas"]["VerdictEnum"]
+            | components["schemas"]["NullEnum"]
+          )
+        | null
+      signals: components["schemas"]["Signals"] | null
+      evidence: components["schemas"]["Evidence"][]
+    }
     ResumeFile: {
       /** File name */
       readonly filename: string
@@ -1712,6 +1850,55 @@ export interface components {
      * @enum {string}
      */
     SalaryPeriodEnum: "month" | "year"
+    Screening: {
+      status: components["schemas"]["ScreeningStatusEnum"]
+      resume_status:
+        | (
+            | components["schemas"]["ExtractionStatusEnum"]
+            | components["schemas"]["NullEnum"]
+          )
+        | null
+      detail: string
+      /** Format: date-time */
+      completed_at: string | null
+      must_total: number
+      must_meets: number
+      must_partial: number
+      nice_total: number
+      nice_meets: number
+      nice_partial: number
+      /** Format: double */
+      points: number
+      max_points: number
+      weights: components["schemas"]["Weights"]
+      requirements: components["schemas"]["RequirementResult"][]
+    }
+    /**
+     * @description * `waiting` - Waiting for the résumé
+     *     * `pending` - Pending
+     *     * `processing` - Processing
+     *     * `ready` - Ready
+     *     * `failed` - Failed
+     * @enum {string}
+     */
+    ScreeningStatusEnum:
+      "waiting" | "pending" | "processing" | "ready" | "failed"
+    /** @description The counts, for the board. The evidence is one click away, on the profile. */
+    ScreeningSummary: {
+      readonly status: components["schemas"]["ScreeningStatusEnum"]
+      /** Must-haves */
+      readonly must_total: number
+      /** Must-haves met */
+      readonly must_meets: number
+      /** Must-haves partly met */
+      readonly must_partial: number
+      /** Nice-to-haves */
+      readonly nice_total: number
+      /** Nice-to-haves met */
+      readonly nice_meets: number
+      /** Nice-to-haves partly met */
+      readonly nice_partial: number
+    }
     /**
      * @description * `header` - Header
      *     * `summary` - Summary
@@ -1732,12 +1919,43 @@ export interface components {
       | "languages"
       | "certifications"
       | "other"
+    SemanticSignal: {
+      level: components["schemas"]["SignalLevelEnum"]
+      /**
+       * Format: double
+       * @description Cosine similarity of the closest passage.
+       */
+      score: number
+      passage: number | null
+    }
     /** @description What the app needs after login or refresh: who, and in which company. */
     Session: {
       access: string
       user: components["schemas"]["User"]
       company: components["schemas"]["Company"]
       companies: components["schemas"]["Company"][]
+    }
+    /**
+     * @description * `keyword` - keyword
+     *     * `semantic` - semantic
+     *     * `years` - years
+     *     * `level` - level
+     * @enum {string}
+     */
+    SignalEnum: "keyword" | "semantic" | "years" | "level"
+    /**
+     * @description * `strong` - strong
+     *     * `medium` - medium
+     *     * `some` - some
+     *     * `none` - none
+     * @enum {string}
+     */
+    SignalLevelEnum: "strong" | "medium" | "some" | "none"
+    Signals: {
+      keyword: components["schemas"]["KeywordSignal"]
+      semantic?: components["schemas"]["SemanticSignal"]
+      years?: components["schemas"]["YearsSignal"]
+      level?: components["schemas"]["LevelSignal"]
     }
     SignupRequest: {
       company_name: string
@@ -1858,12 +2076,34 @@ export interface components {
       language?: components["schemas"]["LanguageEnum"]
     }
     /**
+     * @description * `meets` - Meets
+     *     * `partial` - Partly meets
+     *     * `no_evidence` - No evidence
+     * @enum {string}
+     */
+    VerdictEnum: "meets" | "partial" | "no_evidence"
+    Weights: {
+      must: number
+      nice: number
+      /**
+       * Format: double
+       * @description Credit for a partly met requirement.
+       */
+      partial: number
+    }
+    /**
      * @description * `onsite` - On-site
      *     * `hybrid` - Hybrid
      *     * `remote` - Remote
      * @enum {string}
      */
     WorkplaceEnum: "onsite" | "hybrid" | "remote"
+    YearsSignal: {
+      required: number
+      /** @description Covered by the matching roles, overlaps once. */
+      months: number
+      roles: number[]
+    }
   }
   responses: never
   parameters: never
@@ -2133,6 +2373,48 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["ResumeText"]
+        }
+      }
+    }
+  }
+  applications_screening_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Screening"]
+        }
+      }
+    }
+  }
+  applications_screening_rerun_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Screening"]
         }
       }
     }
@@ -3151,6 +3433,98 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+    }
+  }
+  screening_dictionary_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Entry"][]
+        }
+      }
+    }
+  }
+  screening_dictionary_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EntryRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["EntryRequest"]
+        "multipart/form-data": components["schemas"]["EntryRequest"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Entry"][]
+        }
+      }
+    }
+  }
+  screening_dictionary_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EntryRequest"]
+        "application/x-www-form-urlencoded": components["schemas"]["EntryRequest"]
+        "multipart/form-data": components["schemas"]["EntryRequest"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Entry"][]
+        }
+      }
+    }
+  }
+  screening_dictionary_destroy: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Entry"][]
+        }
       }
     }
   }

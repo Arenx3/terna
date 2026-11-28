@@ -26,6 +26,7 @@ import { emailDraft } from "@/api/messaging"
 import { ChoiceSelect } from "@/components/choice-select"
 import { useStageLabel } from "@/components/jobs/stages-editor"
 import { scheduledFor, type When } from "@/components/profile/candidate-emails"
+import { VerdictMeter } from "@/components/screening/verdict-meter"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -358,6 +359,7 @@ function CardBody({
         </span>
         {menu ? <span className="relative z-10">{menu}</span> : null}
       </div>
+      <CardScreening screening={application.screening} />
       <div className="flex items-center justify-between gap-2 text-xs text-faint-foreground">
         <span>
           {t("board.inStage", {
@@ -373,6 +375,49 @@ function CardBody({
         ) : null}
       </div>
     </div>
+  )
+}
+
+/** How the résumé measures up, at a glance; the profile has the evidence. */
+function CardScreening({
+  screening,
+}: {
+  screening: JobApplication["screening"]
+}) {
+  const { t } = useTranslation()
+  if (!screening || screening.status === "waiting") return null
+  if (screening.status === "pending" || screening.status === "processing") {
+    return (
+      <span className="flex items-center gap-2 text-xs text-faint-foreground">
+        <span
+          aria-hidden="true"
+          className="h-1.5 flex-1 animate-pulse rounded-[2px] bg-foreground/10"
+        />
+        {t("board.screening.running")}
+      </span>
+    )
+  }
+  if (screening.status === "failed") {
+    return (
+      <span className="text-xs text-faint-foreground">
+        {t("board.screening.failed")}
+      </span>
+    )
+  }
+  if (screening.must_total + screening.nice_total === 0) return null
+  return (
+    <span className="flex items-center gap-2">
+      <VerdictMeter counts={screening} className="flex-1" />
+      <span
+        aria-hidden="true"
+        className="font-mono text-[11px] whitespace-nowrap text-muted-foreground tabular-nums"
+      >
+        {t("board.screening.must", {
+          meets: screening.must_meets,
+          total: screening.must_total,
+        })}
+      </span>
+    </span>
   )
 }
 

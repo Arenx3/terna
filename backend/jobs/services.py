@@ -90,6 +90,7 @@ def update_job(
     for name, value in fields.items():
         setattr(job, name, value)
     if requirements is not None:
+        before = _requirement_rows(job)
         _sync(
             job.requirements.all(),
             requirements,
@@ -97,6 +98,9 @@ def update_job(
             ("text", "kind"),
             "requirements",
         )
+        if _requirement_rows(job) != before:
+            # Screening listens: every candidate is measured against the new list.
+            _emit(EventType.JOB_REQUIREMENTS_CHANGED, job)
     if stages is not None:
         check_shape(stages)
         _sync(job.stages.all(), stages, lambda: PipelineStage(job=job), ("name", "kind"), "stages")
@@ -142,6 +146,10 @@ def delete_draft(job: Job) -> None:
 
 def _emit(type: EventType, job: Job) -> None:
     emit(type, entity_type="job", entity_id=job.id, label=job.title)
+
+
+def _requirement_rows(job: Job) -> list[tuple]:
+    return list(job.requirements.order_by("position").values_list("id", "text", "kind"))
 
 
 def _has_must_have(job: Job) -> bool:

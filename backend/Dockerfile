@@ -24,11 +24,12 @@ FROM uv AS deps
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
-# Local models (entity recognition now; embeddings and transcription later) only go where
-# they run: the ml worker and the tests.
+# Local models only go where they run. Entity recognition (redaction) runs on the ml worker
+# and in the tests. The embedding model (torch, CPU only) runs on the ml worker alone: the
+# tests use a stand-in for it.
 FROM uv AS deps-ml
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --group ml --no-install-project
+    uv sync --frozen --no-dev --group ml --group embeddings --no-install-project
 
 FROM uv AS deps-dev
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -60,7 +61,10 @@ COPY . .
 USER app
 
 FROM base AS ml
-ENV HF_HOME=/models/huggingface
+# Models download once into the /models volume; nothing is reported back to Hugging Face.
+ENV HF_HOME=/models/huggingface \
+    HF_HUB_DISABLE_TELEMETRY=1 \
+    TOKENIZERS_PARALLELISM=false
 RUN mkdir -p /models && chown app:app /models
 COPY --from=deps-ml /opt/venv /opt/venv
 COPY . .

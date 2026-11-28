@@ -30,8 +30,9 @@ Each worker consumes its own queue. A long transcription never delays an email o
 1. The candidate requests an upload URL, then uploads the résumé straight to storage. The file never passes through Django.
 2. The application is created. An outbox event, `application.submitted`, is written in the same transaction.
 3. `worker-ml` extracts the text, splits it into passages tagged with section and page, and redacts personal data: rules for contact details, IDs (CURP, RFC, NSS), age, birth date, marital status, gender, nationality and address; the candidate's own name in any form; and a small local entity recognizer whose findings are only kept where context confirms them. Each passage keeps its original for the people who can open the profile, plus a redacted copy.
-4. It computes an embedding for each passage and matches the passages against each requirement. Everything that feeds a model reads passages through `screening.analysis`, which only hands out the redacted copy.
-5. The verdicts and their evidence are saved. The kanban board updates live over WebSockets.
+4. It computes an embedding for each passage and matches the passages against each requirement: keywords with Spanish and English synonyms, meaning (a local multilingual model over `pgvector`), and rules for years of experience and language levels. Everything that feeds a model reads passages through `screening.analysis`, which only hands out the redacted copy. See [ADR 0003](adr/0003-explainable-requirement-matching.md).
+5. Each requirement's verdict is saved with the signals behind it and the exact spans of the résumé that prove it. `screening.completed` updates the kanban card and the open profile live over WebSockets.
+6. When the job's requirements or the company's synonyms change, its candidates are screened again.
 
 ### Async screening answer
 
@@ -77,7 +78,7 @@ Django Channels with the Redis channel layer. Each company and each job has its 
 |---|---|---|
 | Text extraction | PDF and DOCX parsers | Scanned PDFs without text are flagged for manual review |
 | Personal data redaction | Rules plus entity recognition | Runs before any embedding is computed |
-| Matching | Multilingual `sentence-transformers` model, aliases and rules | Works across Spanish and English |
+| Matching | `paraphrase-multilingual-MiniLM-L12-v2` (`sentence-transformers`, CPU), synonyms and rules | Works across Spanish and English. Pinned revision, only in the ml image |
 | Transcription | `faster-whisper` on CPU | Model size configurable. CI uses the smallest model. |
 
 Models are downloaded once into a dedicated volume. No external API is called. Terna never analyzes faces, tone of voice or expressions.
@@ -110,7 +111,7 @@ Models are downloaded once into a dedicated volume. No external API is called. T
 | Identity | `Company`, `User`, `Membership`, `Invitation` |
 | Jobs | `Job`, `Requirement`, `PipelineStage`, `QuestionSet`, `Question` |
 | Candidates | `Candidate` (unique per company by email), `Application` |
-| Screening | `Resume`, `ResumePassage` (text, page, embedding), `RequirementMatch` (verdict, evidence, override) |
+| Screening | `Resume`, `ResumePassage` (text, redacted text, page, embedding), `Screening` (counts per application), `RequirementMatch` (verdict, signals, evidence), `RequirementVector`, `Synonym` |
 | Async answers | `Answer` (text, voice or video), `TranscriptSegment`, `Clip` |
 | Decision | `InterviewSlot`, `Interview`, `Scorecard`, `Shortlist` |
 | Collaboration | `Comment`, `Notification` |

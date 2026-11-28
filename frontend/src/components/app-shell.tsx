@@ -1,4 +1,5 @@
 import {
+  BookOpenTextIcon,
   BriefcaseBusinessIcon,
   HouseIcon,
   MailIcon,
@@ -143,6 +144,13 @@ export function AppShell() {
                     to="/settings/emails"
                     icon={MailIcon}
                     label={t("nav.emails")}
+                  />
+                ) : null}
+                {canSeeJobs ? (
+                  <NavItem
+                    to="/settings/synonyms"
+                    icon={BookOpenTextIcon}
+                    label={t("nav.dictionary")}
                   />
                 ) : null}
                 {isAdmin ? (
